@@ -3,10 +3,10 @@ import mongoose from "mongoose";
 import { swaggerUi, swaggerSpec } from "./swagger";
 
 import authRoute from "./routes/authRoute";
-import productsRoute from "./routes/productsRoute";
+/* import productsRoute from "./routes/productsRoute";
 import cartRoute from "./routes/cartRoute";
 import ordersRoute from "./routes/ordersRoute";
-import commentsRoute from "./routes/commentsRoute";
+import commentsRoute from "./routes/commentsRoute"; */
 
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.dev" });
@@ -22,11 +22,11 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // API routes
-app.use("/auth", authRoute);
-app.use("/products", productsRoute);
+app.use("/", authRoute);
+/* app.use("/products", productsRoute);
 app.use("/cart", cartRoute);
 app.use("/orders", ordersRoute);
-app.use("/comments", commentsRoute);
+app.use("/comments", commentsRoute); */
 
 // Swagger JSON endpoint
 app.get('/api-docs.json', (req, res) => {

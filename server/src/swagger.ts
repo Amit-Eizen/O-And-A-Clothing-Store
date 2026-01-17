@@ -26,7 +26,7 @@ const options: swaggerJsdoc.Options = {
             },
         },
         tags: [
-            { name: 'Auth', description: 'Authentication endpoints' },
+            { name: 'Authentication', description: 'Authentication endpoints' },
             { name: 'Products', description: 'Product management' },
             { name: 'Cart', description: 'Shopping cart' },
             { name: 'Orders', description: 'Order management' },
