@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import user from '../models/userModel';
+import { OAuth2Client } from 'google-auth-library';
+
 
 type GeneratedTokens = {
     token: string;
@@ -133,12 +135,15 @@ const refreshToken = async (oldRefreshToken: string): Promise<GeneratedTokens> =
     }
 };
 
-const googleLogin = async (credential: string): Promise<GeneratedTokens> => {
+const client = new OAuth2Client();
+const googleSignIn = async (credential: string): Promise<GeneratedTokens> => {
     try {
-        // Verify Google credential and extract user info (pseudo-code)
-        const respose = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-        const googleUser = await respose.json();
-        if (!googleUser.email) {
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const googleUser = ticket.getPayload();
+        if (!googleUser?.email) {
             throw new Error('Invalid Google token');
         }
 
@@ -157,7 +162,7 @@ const googleLogin = async (credential: string): Promise<GeneratedTokens> => {
         return tokens;
     }
     catch (error) {
-        throw new Error('Error with Google login: ' + error);
+        throw new Error('Error with Google sign in: ' + error);
     }
 };      
 
@@ -166,5 +171,5 @@ export default {
     login,
     logout,
     refreshToken,
-    googleLogin
+    googleSignIn
 };

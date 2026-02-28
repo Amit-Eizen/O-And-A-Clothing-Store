@@ -45,10 +45,10 @@ const refreshToken = async (req: Request, res: Response) => {
     }
 };
 
-const googleLogin = async (req: Request, res: Response) => {
+const googleSignIn = async (req: Request, res: Response) => {
     try {
         const { credential } = req.body;
-        const tokens = await authService.googleLogin(credential);
+        const tokens = await authService.googleSignIn(credential);
         res.status(200).json(tokens);
     } catch (error: any) {
         return sendError(401, error, res);
@@ -60,5 +60,5 @@ export default {
     login,
     logout,
     refreshToken,
-    googleLogin
+    googleSignIn
 };
