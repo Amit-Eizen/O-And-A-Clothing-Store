@@ -180,6 +180,6 @@ router.post("/refresh-token", authController.refreshToken);
  *       401:
  *         description: Invalid Google token
  */
-router.post("/google", authController.googleLogin);
+router.post("/google", authController.googleSignIn);
 
 export default router;

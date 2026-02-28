@@ -15,6 +15,18 @@ const testUser = {
     _id: ""
 };
 
+jest.mock("google-auth-library", () => ({
+    OAuth2Client: jest.fn().mockImplementation(() => ({
+        verifyIdToken: jest.fn().mockResolvedValue({
+            getPayload: () => ({
+                email: "google.user@gmail.com",
+                name: "Google User",
+                picture: "https://example.com/photo.jpg",
+            }),
+        }),
+    })),
+}));
+
 beforeAll(async () => {
     app = await initApp();
     await user.deleteMany();
@@ -155,6 +167,32 @@ describe("Auth API Tests", () => {
                     "refreshToken": testUser.refreshToken
                 });
             expect(refreshResponse.status).toBe(401);
+        });
+    });
+
+    describe("POST /google", () => {
+        test("should fail to login with invalid Google token", async () => {
+            const { OAuth2Client } = require("google-auth-library");
+            const mockClient = OAuth2Client.mock.results[0].value;
+            mockClient.verifyIdToken.mockRejectedValueOnce(new Error("Invalid token"));
+
+            const response = await request(app)
+                .post("/google")
+                .send({
+                    "credential": "invalid_google_token"
+                });
+            expect(response.status).toBe(401);
+        });
+
+        test("should login with valid Google token (mocked)", async () => {
+            const response = await request(app)
+                .post("/google")
+                .send({
+                    "credential": "mocked-google-token"
+                });
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty("token");
+            expect(response.body).toHaveProperty("refreshToken");
         });
     });
 });
