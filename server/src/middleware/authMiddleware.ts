@@ -1,5 +1,6 @@
 import {Request, Response, NextFunction} from 'express';
 import jwt from 'jsonwebtoken';
+import userModel from '../models/userModel';
 
 export type AuthRequest = Request & { userId?: string };
 
@@ -21,4 +22,16 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     } catch (error) {
         return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }  
+};
+
+export const authorizeAdmin = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = await userModel.findById(req.userId);
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ message: 'Forbidden: Admin access required' });
+        }
+        next();
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error' });
+    }
 };

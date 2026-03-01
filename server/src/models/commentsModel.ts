@@ -8,9 +8,22 @@ export interface IComment extends Document {
 
 const commentSchema = new Schema<IComment>(
     {
-        userId: { type: Schema.Types.ObjectId, ref: "user", required: true },
-        reviewId: { type: Schema.Types.ObjectId, ref: "reviews", required: true },
-        content: { type: String, required: true },
+        userId: { 
+            type: Schema.Types.ObjectId, 
+            ref: "user", 
+            required: true 
+        },
+
+        reviewId: { 
+            type: Schema.Types.ObjectId, 
+            ref: "reviews", 
+            required: true 
+        },
+
+        content: { 
+            type: String, 
+            required: true 
+        },
     },
     { timestamps: true }
 );

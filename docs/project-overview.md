@@ -27,28 +27,33 @@ O-And-A-Clothing-Store/
 ├── server/                     # Node.js backend (Express + TypeScript)
 │   ├── src/
 │   │   ├── models/
-│   │   │   ├── userModel.ts       # User schema (username, email, password, refreshToken[], address, phoneNumber, profileImage)
+│   │   │   ├── userModel.ts       # User schema (username, email, password, refreshToken[], address, phoneNumber, profileImage, role)
 │   │   │   ├── reviewsModel.ts    # Review schema (userId, title, content, rating, images, likes)
+│   │   │   ├── productsModel.ts   # Product schema (name, brand, description, price, salePrice, category, gender, sizes, colors, images, stock, tags)
 │   │   │   └── commentsModel.ts   # Comment schema (userId, reviewId, content)
 │   │   ├── services/
 │   │   │   ├── baseService.ts     # Reusable CRUD service (getAll, getById, create, update, delete)
 │   │   │   ├── authService.ts     # Auth logic (register, login, logout, refreshToken, googleSignIn)
 │   │   │   ├── reviewsService.ts  # Reviews logic (getWithPaging, getByUserId, toggleLike)
+│   │   │   ├── productsService.ts # Products logic (getProductsByCategory, searchProducts)
 │   │   │   └── commentsService.ts # Comments logic (getCommentsByReviewId)
 │   │   ├── controllers/
 │   │   │   ├── baseController.ts      # Reusable CRUD controller with HTTP status codes
 │   │   │   ├── authController.ts      # Auth endpoints handler
 │   │   │   ├── reviewsController.ts   # Reviews endpoints (create with userId from token, paging, like)
+│   │   │   ├── productsControllers.ts # Products endpoints (getByCategory, search)
 │   │   │   └── commentsControllers.ts # Comments endpoints (create with userId from token, getByReview)
 │   │   ├── middleware/
-│   │   │   └── authMiddleware.ts   # JWT verification middleware (Bearer token)
+│   │   │   └── authMiddleware.ts   # JWT verification (authenticate) + admin authorization (authorizeAdmin)
 │   │   ├── routes/
 │   │   │   ├── authRoute.ts       # Auth routes with Swagger docs
 │   │   │   ├── reviewsRoute.ts    # Reviews routes with Swagger docs
+│   │   │   ├── productsRoute.ts   # Products routes with Swagger docs (admin-only for CUD)
 │   │   │   └── commentsRoute.ts   # Comments routes with Swagger docs
 │   │   ├── tests/
 │   │   │   ├── auth.test.ts       # Auth tests (register, login, refresh, logout, Google OAuth)
 │   │   │   ├── reviews.test.ts    # Reviews tests (CRUD, paging, like/unlike, auth)
+│   │   │   ├── products.test.ts   # Products tests (CRUD, search, category, gender filter, admin auth)
 │   │   │   └── comments.test.ts   # Comments tests (CRUD, getByReview, auth)
 │   │   ├── app.ts              # Express app setup (MongoDB, Swagger, CORS, routes)
 │   │   ├── server.ts           # Entry point
@@ -154,10 +159,12 @@ Validation rules:
 ```
 BaseService (getAll, getById, create, update, delete)
     ├── ReviewsService extends BaseService (adds getWithPaging, getByUserId, toggleLike)
+    ├── ProductsService extends BaseService (adds getProductsByCategory, searchProducts)
     └── CommentsService extends BaseService (adds getCommentsByReviewId)
 
 BaseController (getAll, getById, create, update, delete - with HTTP status codes)
     ├── ReviewsController extends BaseController (overrides create for userId from token, adds paging, like)
+    ├── ProductsController extends BaseController (adds getProductsByCategory, searchProducts)
     └── CommentsController extends BaseController (overrides create for userId from token, adds getByReview)
 ```
 
@@ -173,7 +180,9 @@ Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REF
 
 ### Middleware
 
-`authMiddleware.ts` extracts JWT from `Authorization: Bearer <token>` header, verifies it, and attaches `userId` to the request. Used on protected routes (not on login/register).
+`authMiddleware.ts` provides two middlewares:
+- **authenticate**: Extracts JWT from `Authorization: Bearer <token>` header, verifies it, attaches `userId` to request. Used on protected routes.
+- **authorizeAdmin**: Checks that the authenticated user has `role: "admin"` in DB. Used on product management routes (create/update/delete). Returns 403 if not admin.
 
 ---
 
@@ -189,6 +198,25 @@ Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REF
 | address | object | Optional (street, city, zipCode, country) |
 | phoneNumber | string | Optional |
 | profileImage | string | Optional |
+| role | string | "user" or "admin", default: "user" |
+
+### Product
+| Field | Type | Notes |
+|-------|------|-------|
+| name | string | Required |
+| brand | string | Required |
+| description | string | Required (for future AI integration) |
+| price | number | Required |
+| salePrice | number | Optional discount price |
+| category | string | Required (e.g., shirts, pants, shoes) |
+| gender | string | Required, enum: "men", "women", "unisex" |
+| sizes | string[] | Available sizes |
+| colors | string[] | Available colors |
+| images | string[] | Product image paths |
+| stock | number | Required, default: 0 |
+| tags | string[] | For search (e.g., cotton, casual, summer) |
+| createdAt | Date | Auto (timestamps) |
+| updatedAt | Date | Auto (timestamps) |
 
 ### Review
 | Field | Type | Notes |
