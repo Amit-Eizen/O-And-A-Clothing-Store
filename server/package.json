@@ -10,6 +10,7 @@
     "testComment": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/comments.test.ts",
     "testProducts": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/products.test.ts",
     "testAuth": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/auth.test.ts",
+    "testReviews": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/reviews.test.ts",
     "testLLMSearch": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/services/llmService.test.ts"
   },
   "keywords": [],

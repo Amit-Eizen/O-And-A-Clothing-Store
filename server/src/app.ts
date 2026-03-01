@@ -4,6 +4,7 @@ import { swaggerUi, swaggerSpec } from "./swagger";
 import cors from "cors";
 
 import authRoute from "./routes/authRoute";
+import reviewsRoute from "./routes/reviewsRoute";
 /* import productsRoute from "./routes/productsRoute";
 import cartRoute from "./routes/cartRoute";
 import ordersRoute from "./routes/ordersRoute";
@@ -24,6 +25,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 
 // API routes
 app.use("/", authRoute);
+app.use("/reviews", reviewsRoute);
 /* app.use("/products", productsRoute);
 app.use("/cart", cartRoute);
 app.use("/orders", ordersRoute);
