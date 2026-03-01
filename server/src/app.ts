@@ -7,8 +7,8 @@ import authRoute from "./routes/authRoute";
 import reviewsRoute from "./routes/reviewsRoute";
 /* import productsRoute from "./routes/productsRoute";
 import cartRoute from "./routes/cartRoute";
-import ordersRoute from "./routes/ordersRoute";
-import commentsRoute from "./routes/commentsRoute"; */
+import ordersRoute from "./routes/ordersRoute"; */
+import commentsRoute from "./routes/commentsRoute";
 
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.dev" });
@@ -28,8 +28,8 @@ app.use("/", authRoute);
 app.use("/reviews", reviewsRoute);
 /* app.use("/products", productsRoute);
 app.use("/cart", cartRoute);
-app.use("/orders", ordersRoute);
-app.use("/comments", commentsRoute); */
+app.use("/orders", ordersRoute);*/
+app.use("/comments", commentsRoute); 
 
 // Swagger JSON endpoint
 app.get('/api-docs.json', (req, res) => {

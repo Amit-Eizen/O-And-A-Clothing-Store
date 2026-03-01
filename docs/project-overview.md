@@ -27,20 +27,29 @@ O-And-A-Clothing-Store/
 ├── server/                     # Node.js backend (Express + TypeScript)
 │   ├── src/
 │   │   ├── models/
-│   │   │   ├── userModel.ts    # User schema (username, email, password, refreshToken[], address, phoneNumber, profileImage)
-│   │   │   └── reviewsModel.ts # Review schema (userId, title, content, rating, images, likes)
+│   │   │   ├── userModel.ts       # User schema (username, email, password, refreshToken[], address, phoneNumber, profileImage)
+│   │   │   ├── reviewsModel.ts    # Review schema (userId, title, content, rating, images, likes)
+│   │   │   └── commentsModel.ts   # Comment schema (userId, reviewId, content)
 │   │   ├── services/
-│   │   │   ├── baseService.ts  # Reusable CRUD service (getAll, getById, create, update, delete)
-│   │   │   └── authService.ts  # Auth logic (register, login, logout, refreshToken, googleSignIn)
+│   │   │   ├── baseService.ts     # Reusable CRUD service (getAll, getById, create, update, delete)
+│   │   │   ├── authService.ts     # Auth logic (register, login, logout, refreshToken, googleSignIn)
+│   │   │   ├── reviewsService.ts  # Reviews logic (getWithPaging, getByUserId, toggleLike)
+│   │   │   └── commentsService.ts # Comments logic (getCommentsByReviewId)
 │   │   ├── controllers/
-│   │   │   ├── baseController.ts   # Reusable CRUD controller with HTTP status codes
-│   │   │   └── authController.ts   # Auth endpoints handler
+│   │   │   ├── baseController.ts      # Reusable CRUD controller with HTTP status codes
+│   │   │   ├── authController.ts      # Auth endpoints handler
+│   │   │   ├── reviewsController.ts   # Reviews endpoints (create with userId from token, paging, like)
+│   │   │   └── commentsControllers.ts # Comments endpoints (create with userId from token, getByReview)
 │   │   ├── middleware/
 │   │   │   └── authMiddleware.ts   # JWT verification middleware (Bearer token)
 │   │   ├── routes/
-│   │   │   └── authRoute.ts    # Auth routes with Swagger docs
+│   │   │   ├── authRoute.ts       # Auth routes with Swagger docs
+│   │   │   ├── reviewsRoute.ts    # Reviews routes with Swagger docs
+│   │   │   └── commentsRoute.ts   # Comments routes with Swagger docs
 │   │   ├── tests/
-│   │   │   └── auth.test.ts    # Auth tests (register, login, refresh, logout, Google OAuth)
+│   │   │   ├── auth.test.ts       # Auth tests (register, login, refresh, logout, Google OAuth)
+│   │   │   ├── reviews.test.ts    # Reviews tests (CRUD, paging, like/unlike, auth)
+│   │   │   └── comments.test.ts   # Comments tests (CRUD, getByReview, auth)
 │   │   ├── app.ts              # Express app setup (MongoDB, Swagger, CORS, routes)
 │   │   ├── server.ts           # Entry point
 │   │   └── swagger.ts          # Swagger/OpenAPI configuration
@@ -144,10 +153,12 @@ Validation rules:
 
 ```
 BaseService (getAll, getById, create, update, delete)
-    └── ReviewsService extends BaseService (adds custom methods like toggleLike, getWithPaging)
+    ├── ReviewsService extends BaseService (adds getWithPaging, getByUserId, toggleLike)
+    └── CommentsService extends BaseService (adds getCommentsByReviewId)
 
 BaseController (getAll, getById, create, update, delete - with HTTP status codes)
-    └── ReviewsController extends BaseController (adds custom endpoints)
+    ├── ReviewsController extends BaseController (overrides create for userId from token, adds paging, like)
+    └── CommentsController extends BaseController (overrides create for userId from token, adds getByReview)
 ```
 
 Auth doesn't use base classes because it has completely different logic.
@@ -182,12 +193,21 @@ Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REF
 ### Review
 | Field | Type | Notes |
 |-------|------|-------|
-| userId | ObjectId (ref: users) | Who posted it |
+| userId | ObjectId (ref: user) | Who posted it |
 | title | string | Review title |
 | content | string | Review text |
 | rating | number | 1-5 stars |
 | images | string[] | Array of image paths (stored on server, not DB) |
 | likes | ObjectId[] | Array of user IDs who liked |
+| createdAt | Date | Auto (timestamps) |
+| updatedAt | Date | Auto (timestamps) |
+
+### Comment
+| Field | Type | Notes |
+|-------|------|-------|
+| userId | ObjectId (ref: user) | Who wrote the comment |
+| reviewId | ObjectId (ref: reviews) | Which review it belongs to |
+| content | string | Comment text |
 | createdAt | Date | Auto (timestamps) |
 | updatedAt | Date | Auto (timestamps) |
 
