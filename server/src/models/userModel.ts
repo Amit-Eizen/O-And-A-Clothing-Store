@@ -13,6 +13,7 @@ export interface IUser {
     };
     phoneNumber?: string;
     profileImage?: string;
+    role: "user" | "admin";
 } 
 
 const userSchema = new mongoose.Schema({
@@ -51,6 +52,12 @@ const userSchema = new mongoose.Schema({
 
     profileImage: { 
         type: String 
+    },
+
+    role: {
+        type: String,
+        enum: ["user", "admin"],
+        default: "user"
     }
 
 });
