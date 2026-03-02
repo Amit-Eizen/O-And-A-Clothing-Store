@@ -1,5 +1,6 @@
 import BaseService from "../services/baseService";
 import reviewsModel from "../models/reviewsModel";
+import commentsModel from "../models/commentsModel";
 
 class ReviewsService extends BaseService {
     constructor() {
@@ -7,9 +8,13 @@ class ReviewsService extends BaseService {
     }
 
     async getById(id: string) {
-        return this.model
+        const review = await this.model
             .findById(id)
             .populate("userId", "username profileImage");
+        if (!review) return null;
+
+        const commentCount = await commentsModel.countDocuments({ reviewId: id });
+        return { ...review.toObject(), commentCount };
     }
 
     async getwithPaging(page: number, limit: number) {
@@ -21,13 +26,38 @@ class ReviewsService extends BaseService {
             .limit(limit)
             .populate("userId", "username profileImage");
         const total = await this.model.countDocuments();
-        return { reviews, total };
+
+        const reviewIds = reviews.map((r: any) => r._id);
+        const commentCounts = await commentsModel.aggregate([
+            { $match: { reviewId: { $in: reviewIds } } },
+            { $group: { _id: "$reviewId", count: { $sum: 1 } } }
+        ]);
+        const countMap = new Map(commentCounts.map((c: any) => [c._id.toString(), c.count]));
+
+        const reviewsWithCount = reviews.map((r: any) => ({
+            ...r.toObject(),
+            commentCount: countMap.get(r._id.toString()) || 0
+        }));
+
+        return { reviews: reviewsWithCount, total };
     }
 
     async getByUserId(userId: string) {
-        return await this.model.find({ userId })
+        const reviews = await this.model.find({ userId })
             .sort({ createdAt: -1 })
             .populate("userId", "username profileImage");
+
+        const reviewIds = reviews.map((r: any) => r._id);
+        const commentCounts = await commentsModel.aggregate([
+            { $match: { reviewId: { $in: reviewIds } } },
+            { $group: { _id: "$reviewId", count: { $sum: 1 } } }
+        ]);
+        const countMap = new Map(commentCounts.map((c: any) => [c._id.toString(), c.count]));
+
+        return reviews.map((r: any) => ({
+            ...r.toObject(),
+            commentCount: countMap.get(r._id.toString()) || 0
+        }));
     }
 
     async toggleLike(reviewId: string, userId: string) {

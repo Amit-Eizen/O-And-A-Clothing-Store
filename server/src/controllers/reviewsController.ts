@@ -10,11 +10,18 @@ class ReviewsController extends BaseController {
 
     async create(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const reviewData = 
-                {
-                    ...req.body,
-                    userId: req.userId
-                };
+            const images: string[] = [];
+            if (req.files && Array.isArray(req.files)) {
+                for (const file of req.files) {
+                    images.push(`/public/uploads/${file.filename}`);
+                }
+            }
+
+            const reviewData = {
+                ...req.body,
+                userId: req.userId,
+                images
+            };
             const newReview = await reviewsService.create(reviewData);
             res.status(201).json(newReview);
         } catch (error) {
