@@ -7,7 +7,7 @@ class CommentsService extends BaseService {
     }
 
     async getCommentsByReviewId(reviewId: string) {
-        const comments = await this.model.find({ reviewId }).sort({ createdAt: -1 }).populate('userId', 'username profilePicture');
+        const comments = await this.model.find({ reviewId }).sort({ createdAt: -1 }).populate('userId', 'username profileImage');
         return comments;
     }
 }

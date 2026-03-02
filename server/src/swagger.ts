@@ -32,6 +32,7 @@ const options: swaggerJsdoc.Options = {
             { name: 'Cart', description: 'Shopping cart' },
             { name: 'Orders', description: 'Order management' },
             { name: 'Comments', description: 'Product comments' },
+            { name: 'Users', description: 'User profile management' },
         ],
     },
     apis: ['./src/routes/*.ts'],

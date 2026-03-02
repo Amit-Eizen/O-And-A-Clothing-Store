@@ -1,6 +1,7 @@
 import express from "express";
 import reviewsController from "../controllers/reviewsController";
 import { authenticate } from "../middleware/authMiddleware";
+import { uploadReviewImages } from "../middleware/uploadMiddleware";
 
 const router = express.Router();
 
@@ -109,7 +110,7 @@ router.get("/user/:userId", reviewsController.getByUserId.bind(reviewsController
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -129,6 +130,7 @@ router.get("/user/:userId", reviewsController.getByUserId.bind(reviewsController
  *                 type: array
  *                 items:
  *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Review created successfully
@@ -137,7 +139,7 @@ router.get("/user/:userId", reviewsController.getByUserId.bind(reviewsController
  *       500:
  *         description: Server error
  */
-router.post("/", authenticate, reviewsController.create.bind(reviewsController));
+router.post("/", authenticate, uploadReviewImages, reviewsController.create.bind(reviewsController));
 
 /**
  * @swagger

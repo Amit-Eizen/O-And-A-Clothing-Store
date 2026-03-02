@@ -1,4 +1,5 @@
 import express, { Express } from "express";
+import path from "path";
 import mongoose from "mongoose";
 import { swaggerUi, swaggerSpec } from "./swagger";
 import cors from "cors";
@@ -9,6 +10,7 @@ import productsRoute from "./routes/productsRoute";
 import cartRoute from "./routes/cartRoute";
 import ordersRoute from "./routes/ordersRoute"; 
 import commentsRoute from "./routes/commentsRoute";
+import userRoute from "./routes/userRoute";
 
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.dev" });
@@ -16,6 +18,8 @@ dotenv.config({ path: ".env.dev" });
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use("/public", express.static(path.join(__dirname, "../public")));
+
 // Swagger UI setup
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   explorer: true,
@@ -29,7 +33,8 @@ app.use("/reviews", reviewsRoute);
 app.use("/products", productsRoute);
 app.use("/cart", cartRoute);
 app.use("/orders", ordersRoute);
-app.use("/comments", commentsRoute); 
+app.use("/comments", commentsRoute);
+app.use("/users", userRoute);
 
 // Swagger JSON endpoint
 app.get('/api-docs.json', (req, res) => {
