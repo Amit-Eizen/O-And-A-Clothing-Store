@@ -1,6 +1,7 @@
 import express from "express";
 import productsController from "../controllers/productsControllers";
 import { authenticate, authorizeAdmin } from "../middleware/authMiddleware";
+import searchController from "../controllers/searchController";
 
 const router = express.Router();
 
@@ -29,6 +30,29 @@ const router = express.Router();
  *         description: Server error
  */
 router.get("/", productsController.getAll.bind(productsController));
+
+/**
+ * @swagger
+ * /products/smart-search:
+ *   get:
+ *     tags: [Products]
+ *     summary: AI-powered smart search
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Natural language search query (e.g. "black summer shirt for men")
+ *     responses:
+ *       200:
+ *         description: List of matching products
+ *       400:
+ *         description: Search query is required
+ *       500:
+ *         description: Server error
+ */
+router.get("/smart-search", searchController.smartSearch);
 
 /**
  * @swagger
