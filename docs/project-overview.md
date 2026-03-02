@@ -30,18 +30,24 @@ O-And-A-Clothing-Store/
 │   │   │   ├── userModel.ts       # User schema (username, email, password, refreshToken[], address, phoneNumber, profileImage, role)
 │   │   │   ├── reviewsModel.ts    # Review schema (userId, title, content, rating, images, likes)
 │   │   │   ├── productsModel.ts   # Product schema (name, brand, description, price, salePrice, category, gender, sizes, colors, images, stock, tags)
+│   │   │   ├── cartModel.ts        # Cart schema (userId unique, items[productId, quantity, size, color, price])
+│   │   │   ├── ordersModel.ts      # Order schema (userId, orderNumber, items[], totalPrice, shipping, status, shippingAddress)
 │   │   │   └── commentsModel.ts   # Comment schema (userId, reviewId, content)
 │   │   ├── services/
 │   │   │   ├── baseService.ts     # Reusable CRUD service (getAll, getById, create, update, delete)
 │   │   │   ├── authService.ts     # Auth logic (register, login, logout, refreshToken, googleSignIn)
 │   │   │   ├── reviewsService.ts  # Reviews logic (getWithPaging, getByUserId, toggleLike)
 │   │   │   ├── productsService.ts # Products logic (getProductsByCategory, searchProducts)
+│   │   │   ├── cartService.ts     # Cart logic (getCartByUserId, addItemToCart, updateItemQuantity, removeItemFromCart, clearCart)
+│   │   │   ├── ordersService.ts   # Orders logic (createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
 │   │   │   └── commentsService.ts # Comments logic (getCommentsByReviewId)
 │   │   ├── controllers/
 │   │   │   ├── baseController.ts      # Reusable CRUD controller with HTTP status codes
 │   │   │   ├── authController.ts      # Auth endpoints handler
 │   │   │   ├── reviewsController.ts   # Reviews endpoints (create with userId from token, paging, like)
 │   │   │   ├── productsControllers.ts # Products endpoints (getByCategory, search)
+│   │   │   ├── cartController.ts      # Cart endpoints (get, addItem, updateQuantity, removeItem, clear)
+│   │   │   ├── ordersController.ts    # Orders endpoints (createOrder, getByUserId, getById, updateStatus)
 │   │   │   └── commentsControllers.ts # Comments endpoints (create with userId from token, getByReview)
 │   │   ├── middleware/
 │   │   │   └── authMiddleware.ts   # JWT verification (authenticate) + admin authorization (authorizeAdmin)
@@ -49,11 +55,15 @@ O-And-A-Clothing-Store/
 │   │   │   ├── authRoute.ts       # Auth routes with Swagger docs
 │   │   │   ├── reviewsRoute.ts    # Reviews routes with Swagger docs
 │   │   │   ├── productsRoute.ts   # Products routes with Swagger docs (admin-only for CUD)
+│   │   │   ├── cartRoute.ts       # Cart routes with Swagger docs (all authenticated)
+│   │   │   ├── ordersRoute.ts     # Orders routes with Swagger docs (updateStatus admin-only)
 │   │   │   └── commentsRoute.ts   # Comments routes with Swagger docs
 │   │   ├── tests/
 │   │   │   ├── auth.test.ts       # Auth tests (register, login, refresh, logout, Google OAuth)
 │   │   │   ├── reviews.test.ts    # Reviews tests (CRUD, paging, like/unlike, auth)
 │   │   │   ├── products.test.ts   # Products tests (CRUD, search, category, gender filter, admin auth)
+│   │   │   ├── cart.test.ts       # Cart tests (add, update quantity, remove, clear, duplicate item, auth)
+│   │   │   ├── orders.test.ts     # Orders tests (create from cart, empty cart, getByUser, status update, admin auth)
 │   │   │   └── comments.test.ts   # Comments tests (CRUD, getByReview, auth)
 │   │   ├── app.ts              # Express app setup (MongoDB, Swagger, CORS, routes)
 │   │   ├── server.ts           # Entry point
@@ -160,6 +170,8 @@ Validation rules:
 BaseService (getAll, getById, create, update, delete)
     ├── ReviewsService extends BaseService (adds getWithPaging, getByUserId, toggleLike)
     ├── ProductsService extends BaseService (adds getProductsByCategory, searchProducts)
+    ├── CartService extends BaseService (adds getCartByUserId, addItemToCart, updateItemQuantity, removeItemFromCart, clearCart)
+    ├── OrdersService extends BaseService (adds createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
     └── CommentsService extends BaseService (adds getCommentsByReviewId)
 
 BaseController (getAll, getById, create, update, delete - with HTTP status codes)
@@ -168,7 +180,7 @@ BaseController (getAll, getById, create, update, delete - with HTTP status codes
     └── CommentsController extends BaseController (overrides create for userId from token, adds getByReview)
 ```
 
-Auth doesn't use base classes because it has completely different logic.
+Auth, Cart, and Orders don't use base controller classes - Auth has different logic, Cart and Orders use custom controller functions (not class-based).
 
 ### Environment Files
 
@@ -182,7 +194,39 @@ Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REF
 
 `authMiddleware.ts` provides two middlewares:
 - **authenticate**: Extracts JWT from `Authorization: Bearer <token>` header, verifies it, attaches `userId` to request. Used on protected routes.
-- **authorizeAdmin**: Checks that the authenticated user has `role: "admin"` in DB. Used on product management routes (create/update/delete). Returns 403 if not admin.
+- **authorizeAdmin**: Checks that the authenticated user has `role: "admin"` in DB. Used on product management routes (create/update/delete) and order status updates. Returns 403 if not admin.
+
+---
+
+## Cart & Order Flow
+
+```
+[User] --browses products--> [Product Page]
+    |
+    v
+[Add to Cart] --POST /cart/items--> [Cart] (one per user, userId unique)
+    |                                   |
+    | same product+size+color?          | different size/color?
+    | --> quantity increases             | --> new item added
+    |
+    v
+[Checkout] --POST /orders--> [Order Service]
+    |                              |
+    | 1. Get cart items            |
+    | 2. Calculate totalPrice      |
+    |    (sum of price*quantity    |
+    |     + shipping)              |
+    | 3. Generate orderNumber      |
+    |    (ORD-2026-001)           |
+    | 4. Create order              |
+    | 5. Clear cart                |
+    v
+[Order Created] --status: "pending"--> [Admin updates status]
+    pending → processing → shipped → delivered
+                                    → cancelled
+```
+
+**Price Logic**: The `price` stored in cart/order items is the final price the customer pays. If a product has a `salePrice`, the client sends `salePrice` as the `price`. If not, it sends the regular `price`.
 
 ---
 
@@ -227,6 +271,37 @@ Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REF
 | rating | number | 1-5 stars |
 | images | string[] | Array of image paths (stored on server, not DB) |
 | likes | ObjectId[] | Array of user IDs who liked |
+| createdAt | Date | Auto (timestamps) |
+| updatedAt | Date | Auto (timestamps) |
+
+### Cart
+| Field | Type | Notes |
+|-------|------|-------|
+| userId | ObjectId (ref: user) | Required, unique (one cart per user) |
+| items | Array | Cart items |
+| items.productId | ObjectId (ref: products) | Product reference |
+| items.quantity | number | Required, min: 1 |
+| items.size | string | Selected size |
+| items.color | string | Selected color |
+| items.price | number | Price at time of adding (salePrice or regular price) |
+| createdAt | Date | Auto (timestamps) |
+| updatedAt | Date | Auto (timestamps) |
+
+### Order
+| Field | Type | Notes |
+|-------|------|-------|
+| userId | ObjectId (ref: user) | Who placed the order |
+| orderNumber | string | Unique, format: ORD-YYYY-NNN |
+| items | Array | Ordered items (copied from cart) |
+| items.productId | ObjectId (ref: products) | Product reference |
+| items.quantity | number | Required, min: 1 |
+| items.size | string | Selected size |
+| items.color | string | Selected color |
+| items.price | number | Price paid per unit |
+| totalPrice | number | Sum of (price × quantity) + shipping |
+| shipping | number | Shipping cost, default: 0 |
+| status | string | Enum: pending, processing, shipped, delivered, cancelled |
+| shippingAddress | object | street, city, zipCode, country |
 | createdAt | Date | Auto (timestamps) |
 | updatedAt | Date | Auto (timestamps) |
 
