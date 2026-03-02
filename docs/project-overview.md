@@ -40,12 +40,16 @@ O-And-A-Clothing-Store/
 │   │   │   ├── productsService.ts # Products logic (getProductsByCategory, searchProducts)
 │   │   │   ├── cartService.ts     # Cart logic (getCartByUserId, addItemToCart, updateItemQuantity, removeItemFromCart, clearCart)
 │   │   │   ├── ordersService.ts   # Orders logic (createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
-│   │   │   └── commentsService.ts # Comments logic (getCommentsByReviewId)
+│   │   │   ├── commentsService.ts # Comments logic (getCommentsByReviewId)
+│   │   │   └── LLM/
+│   │   │       ├── llmService.ts              # Gemini API client (Google Generative AI SDK)
+│   │   │       └── searchService.ts           # Smart search (LLM filter extraction + MongoDB query)
 │   │   ├── controllers/
 │   │   │   ├── baseController.ts      # Reusable CRUD controller with HTTP status codes
 │   │   │   ├── authController.ts      # Auth endpoints handler
 │   │   │   ├── reviewsController.ts   # Reviews endpoints (create with userId from token, paging, like)
 │   │   │   ├── productsControllers.ts # Products endpoints (getByCategory, search)
+│   │   │   ├── searchController.ts    # Smart search endpoint (LLM-powered)
 │   │   │   ├── cartController.ts      # Cart endpoints (get, addItem, updateQuantity, removeItem, clear)
 │   │   │   ├── ordersController.ts    # Orders endpoints (createOrder, getByUserId, getById, updateStatus)
 │   │   │   └── commentsControllers.ts # Comments endpoints (create with userId from token, getByReview)
@@ -64,7 +68,11 @@ O-And-A-Clothing-Store/
 │   │   │   ├── products.test.ts   # Products tests (CRUD, search, category, gender filter, admin auth)
 │   │   │   ├── cart.test.ts       # Cart tests (add, update quantity, remove, clear, duplicate item, auth)
 │   │   │   ├── orders.test.ts     # Orders tests (create from cart, empty cart, getByUser, status update, admin auth)
-│   │   │   └── comments.test.ts   # Comments tests (CRUD, getByReview, auth)
+│   │   │   ├── comments.test.ts   # Comments tests (CRUD, getByReview, auth)
+│   │   │   ├── controllers/
+│   │   │   │   └── productsController.search.test.ts  # Smart search controller unit tests (6 tests, mocked)
+│   │   │   └── services/
+│   │   │       └── llmService.test.ts                 # LLM service integration tests (2 tests, real Gemini API)
 │   │   ├── app.ts              # Express app setup (MongoDB, Swagger, CORS, routes)
 │   │   ├── server.ts           # Entry point
 │   │   └── swagger.ts          # Swagger/OpenAPI configuration
@@ -188,7 +196,7 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 - `.env.test` - Tests (separate test DB)
 - `.env.prod` - Production
 
-Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REFRESH_TOKEN_SECRET`, `REFRESH_TOKEN_EXPIRES_IN`, `GOOGLE_CLIENT_ID`
+Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REFRESH_TOKEN_SECRET`, `REFRESH_TOKEN_EXPIRES_IN`, `GOOGLE_CLIENT_ID`, `GEMINI_API_KEY`
 
 ### Middleware
 
@@ -313,6 +321,60 @@ Required variables: `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `REF
 | content | string | Comment text |
 | createdAt | Date | Auto (timestamps) |
 | updatedAt | Date | Auto (timestamps) |
+
+---
+
+## LLM Smart Search
+
+### Architecture
+
+The smart search feature uses Google's Gemini API to understand natural language product queries and convert them into structured MongoDB filters.
+
+```
+[User] --"red summer dress under 200"--> [Smart Search Endpoint]
+    |
+    v
+[SearchService] --builds prompt--> [LLMService] --Gemini SDK--> [Gemini API (gemini-2.5-flash)]
+    |
+    v
+[LLM returns JSON] --> {"category": "dresses", "color": "red", "maxPrice": 200, "tags": ["summer"]}
+    |
+    v
+[SearchService] --builds MongoDB filter--> [productsService.getAll(filter)]
+    |
+    v
+[Matching Products] --> Response to client
+```
+
+### Components
+
+- **LLMService** (`services/LLM/llmService.ts`): Gemini API client using `@google/generative-ai` SDK. Uses `gemini-2.5-flash` model with `temperature: 0.1` for consistent results, `responseMimeType: "application/json"` for structured output, `maxOutputTokens: 500`.
+- **SearchService** (`services/LLM/searchService.ts`): Builds a prompt that instructs the LLM to extract filters (category, gender, color, size, price range, tags, query). Parses the JSON response and builds a MongoDB filter object.
+- **SearchController** (`controllers/searchController.ts`): Handles `GET /products/smart-search?q=` endpoint.
+
+### Search Filter Extraction
+
+The LLM extracts these optional fields from natural language:
+| Filter | MongoDB Field | Example Query |
+|--------|--------------|---------------|
+| category | category | "show me pants" → `{category: "pants"}` |
+| gender | gender | "women's shoes" → `{gender: "women"}` |
+| color | colors (regex) | "blue jacket" → `{colors: {$regex: "blue", $options: "i"}}` |
+| size | sizes | "XL shirts" → `{sizes: "XL"}` |
+| minPrice/maxPrice | price ($gte/$lte) | "under 200" → `{price: {$lte: 200}}` |
+| tags | tags ($in, regex) | "casual cotton" → `{tags: {$in: [/casual/i, /cotton/i]}}` |
+| query | name/description/brand ($or, regex) | "Nike" → `{$or: [{name: /Nike/i}, ...]}` |
+
+### Fallback
+
+If the LLM response fails to parse as JSON, the service falls back to regular regex-based `productsService.searchProducts(userQuery)`.
+
+### Gemini API
+
+- **SDK**: `@google/generative-ai`
+- **Model**: `gemini-2.5-flash`
+- **API Key**: Configured via `GEMINI_API_KEY` env variable
+- **Get API Key**: https://aistudio.google.com/apikey
 
 ---
 
