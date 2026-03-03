@@ -27,7 +27,7 @@ const Testimonial = () => {
 
             {/* Author */}
             <Typography sx={{ fontSize: 13 }}>
-                <strong>Amit Eizenberg and Ofri Hemo</strong>
+                <strong>Amit Eizenberg and Ofri Hamou</strong>
                 <span style={{ color: "#c8a951" }}> — Fashion Editor, Vogue</span>
             </Typography>
         </Box>
