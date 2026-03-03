@@ -45,3 +45,5 @@ export const uploadReviewImages = multer({
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB per file
 }).array("images", 5);
+
+export const UPLOADS_PATH = "/public/uploads";

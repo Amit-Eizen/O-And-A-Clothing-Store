@@ -27,6 +27,24 @@ router.get("/review/:reviewId", commentsController.getCommentsByReviewId.bind(co
 
 /**
  * @swagger
+ * /comments/user:
+ *   get:
+ *     tags: [Comments]
+ *     summary: Get all comments by the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user's comments with review details
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get("/user", authenticate, commentsController.getCommentsByUserId.bind(commentsController));
+
+/**
+ * @swagger
  * /comments:
  *   post:
  *     tags: [Comments]

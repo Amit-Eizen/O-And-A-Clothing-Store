@@ -117,7 +117,10 @@ router.get("/user/:userId", reviewsController.getByUserId.bind(reviewsController
  *               - title
  *               - content
  *               - rating
+ *               - productId
  *             properties:
+ *               productId:
+ *                 type: string
  *               title:
  *                 type: string
  *               content:

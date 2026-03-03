@@ -1,21 +1,15 @@
 import request from "supertest";
-import initApp from "../app";
 import { Express } from "express";
 import mongoose from "mongoose";
 import ordersModel from "../models/ordersModel";
 import cartModel from "../models/cartModel";
 import userModel from "../models/userModel";
 import productsModel from "../models/productsModel";
+import { initTestApp, createTestUser, registerTestUser, makeAdmin, closeTestDB } from "./testUtils";
 
 let app: Express;
 
-const testUser = {
-    username: "ordertestuser",
-    email: "ordertestuser@example.com",
-    password: "testpassword123",
-    token: "",
-    _id: ""
-};
+const testUser = createTestUser("ordertestuser", "ordertestuser@example.com");
 
 let productId: string;
 let orderId: string;
@@ -28,27 +22,14 @@ const shippingAddress = {
 };
 
 beforeAll(async () => {
-    app = await initApp();
+    app = await initTestApp();
     await ordersModel.deleteMany();
     await cartModel.deleteMany();
     await userModel.deleteMany();
     await productsModel.deleteMany();
 
-    // Register test user
-    const res = await request(app)
-        .post("/register")
-        .send({
-            username: testUser.username,
-            email: testUser.email,
-            password: testUser.password
-        });
-
-    testUser.token = res.body.token;
-    const payload = JSON.parse(Buffer.from(testUser.token.split(".")[1], "base64").toString());
-    testUser._id = payload._id;
-
-    // Set as admin for product creation
-    await userModel.findByIdAndUpdate(testUser._id, { role: "admin" });
+    await registerTestUser(testUser);
+    await makeAdmin(testUser._id);
 
     // Create a product
     const productRes = await request(app)
@@ -72,7 +53,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await closeTestDB();
 });
 
 describe("Orders API Tests", () => {

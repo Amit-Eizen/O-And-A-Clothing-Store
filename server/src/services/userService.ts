@@ -7,26 +7,43 @@ class UserService extends BaseService {
     }
 
     async getProfile(userId: string) {
-        return this.model
+        const user = await this.model
             .findById(userId)
             .select("-password -refreshToken");
+        return user;
     }
 
     async getProfileNameAndImage(userId: string) {
-        return this.model
+        const user = await this.model
             .findById(userId)
             .select("username profileImage");
+        return user;
     }
 
-    async updateProfile(userId: string, updateData: { username?: string; profileImage?: string }) {
+    async updateProfile(userId: string, updateData: {
+        username?: string;
+        profileImage?: string;
+        email?: string;
+        phoneNumber?: string;
+        address?: {
+            street?: string;
+            city?: string;
+            zipCode?: string;
+            country?: string;
+        };
+    }) {
         const allowedUpdates: any = {};
         if (updateData.username !== undefined) allowedUpdates.username = updateData.username;
         if (updateData.profileImage !== undefined) allowedUpdates.profileImage = updateData.profileImage;
+        if (updateData.email !== undefined) allowedUpdates.email = updateData.email;
+        if (updateData.phoneNumber !== undefined) allowedUpdates.phoneNumber = updateData.phoneNumber;
+        if (updateData.address !== undefined) allowedUpdates.address = updateData.address;
 
-        return this.model
+        const user = await this.model
             .findByIdAndUpdate(userId, allowedUpdates, { new: true })
             .select("-password -refreshToken");
-    }
+        return user;
+    } 
 }
 
 export default new UserService();

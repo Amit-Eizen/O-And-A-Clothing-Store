@@ -1,50 +1,27 @@
 import request from "supertest";
-import initApp from "../app";
-import e, { Express } from "express";
+import { Express } from "express";
 import mongoose from "mongoose";
 import productsModel from "../models/productsModel";
 import userModel from "../models/userModel";
+import { initTestApp, createTestUser, registerTestUser, makeAdmin, closeTestDB } from "./testUtils";
 
 let app: Express;
 
-const testUser = {
-    username: "producttestuser",
-    email: "producttestuser@example.com",
-    password: "testpassword123",
-    token: "",
-    refreshToken: "",
-    _id: ""
-};
+const testUser = createTestUser("producttestuser", "producttestuser@example.com");
 
 let productId: string;
 
 beforeAll(async () => {
-    app = await initApp();
+    app = await initTestApp();
     await productsModel.deleteMany();
     await userModel.deleteMany();
 
-    //Register a test user to get a token for authenticated routes
-    const res = await request(app)
-        .post("/register")
-        .send({
-            "username": testUser.username,
-            "email": testUser.email,
-            "password": testUser.password
-        });
-
-    testUser.token = res.body.token;
-    testUser.refreshToken = res.body.refreshToken;
-
-    //Decode token to get user ID
-    const payload = JSON.parse(Buffer.from(testUser.token.split(".")[1], "base64").toString());
-    testUser._id = payload._id;
-
-    // Set user as admin
-    await userModel.findByIdAndUpdate(testUser._id, { role: "admin" });
+    await registerTestUser(testUser);
+    await makeAdmin(testUser._id);
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await closeTestDB();
 });
 
 describe("Products API Tests", () => {

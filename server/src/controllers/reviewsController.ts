@@ -2,6 +2,7 @@ import {Request, Response} from "express";
 import { BaseController } from "./baseController";
 import reviewsService from "../services/reviewsService";
 import { AuthRequest } from "../middleware/authMiddleware";
+import { UPLOADS_PATH } from "../middleware/uploadMiddleware";
 
 class ReviewsController extends BaseController {
     constructor() {
@@ -13,7 +14,7 @@ class ReviewsController extends BaseController {
             const images: string[] = [];
             if (req.files && Array.isArray(req.files)) {
                 for (const file of req.files) {
-                    images.push(`/public/uploads/${file.filename}`);
+                    images.push(`${UPLOADS_PATH}/${file.filename}`);
                 }
             }
 
