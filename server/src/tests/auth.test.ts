@@ -1,19 +1,11 @@
 import request from "supertest";
-import initApp from "../app";
 import { Express } from "express";
 import user from "../models/userModel";
-import mongoose from "mongoose";
+import { initTestApp, createTestUser, closeTestDB } from "./testUtils";
 
 let app: Express;
 
-const testUser = {
-    username: "testuser",
-    email: "test@example.com",
-    password: "Test123!",
-    token: "",
-    refreshToken: "",
-    _id: ""
-};
+const testUser = createTestUser("testuser", "test@example.com", "Test123!");
 
 jest.mock("google-auth-library", () => ({
     OAuth2Client: jest.fn().mockImplementation(() => ({
@@ -28,12 +20,12 @@ jest.mock("google-auth-library", () => ({
 }));
 
 beforeAll(async () => {
-    app = await initApp();
+    app = await initTestApp();
     await user.deleteMany();
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await closeTestDB();
 });
 
 describe("Auth API Tests", () => {

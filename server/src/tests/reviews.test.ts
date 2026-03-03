@@ -1,47 +1,31 @@
 import request from "supertest";
-import initApp from "../app";
 import { Express } from "express";
 import mongoose from "mongoose";
 import reviewsModel from "../models/reviewsModel";
 import userModel from "../models/userModel";
+import { initTestApp, createTestUser, registerTestUser, createTestProduct, closeTestDB } from "./testUtils";
 
 let app: Express;
 
-const testUser = {
-    username: "reviewtestuser",
-    email: "reviewtestuser@example.com",
-    password: "testpassword123",
-    token: "",
-    refreshToken: "",
-    _id: ""
-};
+const testUser = createTestUser("reviewtestuser", "reviewtestuser@example.com");
 
 let reviewId: string;
+let testProductId: string;
 
 beforeAll(async () => {
-    app = await initApp();
+    app = await initTestApp();
     await userModel.deleteMany();
     await reviewsModel.deleteMany();
 
-    //Register a user to get a token for authenticated routes
-    const res = await request(app)
-        .post("/register")
-        .send({
-            "username": testUser.username,
-            "email": testUser.email,
-            "password": testUser.password
-        });
+    await registerTestUser(testUser);
 
-    testUser.token = res.body.token;
-    testUser.refreshToken = res.body.refreshToken;
+    const product = await createTestProduct();
+    testProductId = product._id.toString();
     
-    //Decode token to get user ID
-    const payload = JSON.parse(Buffer.from(testUser.token.split(".")[1], "base64").toString());
-    testUser._id = payload._id;
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await closeTestDB();
 });
 
 describe("Reviews API Tests", () => {
@@ -52,6 +36,7 @@ describe("Reviews API Tests", () => {
                 .set("Authorization", `Bearer ${testUser.token}`)
                 .send({
                     "userId": testUser._id,
+                    "productId": testProductId,
                     "title": "Great Product",
                     "content": "I really liked this product. It exceeded my expectations!",
                     "rating": 5,

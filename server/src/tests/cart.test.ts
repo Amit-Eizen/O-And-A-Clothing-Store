@@ -1,45 +1,26 @@
 import request from "supertest";
-import initApp from "../app";
 import { Express } from "express";
 import mongoose from "mongoose";
 import cartModel from "../models/cartModel";
 import userModel from "../models/userModel";
 import productsModel from "../models/productsModel";
+import { initTestApp, createTestUser, registerTestUser, makeAdmin, closeTestDB } from "./testUtils";
 
 let app: Express;
 
-const testUser = {
-    username: "carttestuser",
-    email: "carttestuser@example.com",
-    password: "testpassword123",
-    token: "",
-    _id: ""
-};
+const testUser = createTestUser("carttestuser", "carttestuser@example.com");
 
 let productId: string;
 let itemId: string;
 
 beforeAll(async () => {
-    app = await initApp();
+    app = await initTestApp();
     await cartModel.deleteMany();
     await userModel.deleteMany();
     await productsModel.deleteMany();
 
-    // Register test user
-    const res = await request(app)
-        .post("/register")
-        .send({
-            username: testUser.username,
-            email: testUser.email,
-            password: testUser.password
-        });
-
-    testUser.token = res.body.token;
-    const payload = JSON.parse(Buffer.from(testUser.token.split(".")[1], "base64").toString());
-    testUser._id = payload._id;
-
-    // Create a product for cart tests
-    await userModel.findByIdAndUpdate(testUser._id, { role: "admin" });
+    await registerTestUser(testUser);
+    await makeAdmin(testUser._id);
 
     const productRes = await request(app)
         .post("/products")
@@ -63,7 +44,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await closeTestDB();
 });
 
 describe("Cart API Tests", () => {

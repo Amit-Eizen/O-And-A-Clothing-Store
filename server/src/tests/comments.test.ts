@@ -1,45 +1,27 @@
 import request from "supertest";
-import initApp from "../app";
 import { Express } from "express";
 import mongoose from "mongoose";
 import commentsModel from "../models/commentsModel";
 import reviewsModel from "../models/reviewsModel";
 import userModel from "../models/userModel";
+import { initTestApp, createTestUser, registerTestUser, createTestProduct, closeTestDB } from "./testUtils";
 
 let app: Express;
 
-const testUser = {
-    username: "testuser",
-    email: "testuser@example.com",
-    password: "testpassword",
-    token: "",
-    refreshToken: "",
-    _id: ""
-};
+const testUser = createTestUser("testuser", "testuser@example.com");
 
 let reviewId: string;
 let commentId: string;
 
 beforeAll(async () => {
-    app = await initApp();
+    app = await initTestApp();
     await commentsModel.deleteMany();
     await reviewsModel.deleteMany();
     await userModel.deleteMany();
 
-    // Register a test user and get tokens
-    const response = await request(app)
-        .post("/register")
-        .send({
-            "username": testUser.username,
-            "email": testUser.email,
-            "password": testUser.password
-        });
+    await registerTestUser(testUser);
 
-    testUser.token = response.body.token;
-    testUser.refreshToken = response.body.refreshToken;
-    
-    const payload = JSON.parse(Buffer.from(testUser.token.split(".")[1], "base64").toString());
-    testUser._id = payload._id;
+    const product = await createTestProduct();
 
     // Create a test review
     const reviewResponse = await request(app)
@@ -48,13 +30,14 @@ beforeAll(async () => {
         .send({
             title: "Test Review",
             content: "This is a test review.",
-            rating: 5
+            rating: 5,
+            productId: product._id.toString()
         });
     reviewId = reviewResponse.body._id;
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await closeTestDB();
 });
 
 describe("Comments API Tests", () => {
