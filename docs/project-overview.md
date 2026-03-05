@@ -10,14 +10,15 @@ E-commerce clothing store with React frontend and Node.js backend. Features auth
 O-And-A-Clothing-Store/
 ├── client/                     # React frontend (Vite + TypeScript + MUI)
 │   ├── src/
-│   │   ├── pages/              # Page components (Auth, Home, Category)
+│   │   ├── pages/              # Page components (Auth, Home, Category, Cart)
 │   │   ├── components/
 │   │   │   ├── auth/           # Login/Register forms
 │   │   │   ├── home/           # Homepage sections (Hero, Categories, NewArrivals, Testimonial)
 │   │   │   ├── layout/         # Navbar, Footer, ScrollToTop
-│   │   │   └── products/       # ProductCard, FiltersDialog
+│   │   │   ├── products/       # ProductCard, FiltersDialog
+│   │   │   └── cart/           # CartItem, OrderSummary, CheckoutDialog, FormField
 │   │   ├── services/           # API client + auth service
-│   │   ├── hooks/              # Custom React hooks (future)
+│   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm)
 │   │   ├── assets/             # Images
 │   │   ├── theme.ts            # MUI theme configuration
 │   │   ├── main.tsx            # Entry point
