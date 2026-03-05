@@ -4,7 +4,9 @@ import Footer from "./components/layout/Footer";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
 import CategoryPage from "./pages/CategoryPage";
+import CartPage from "./pages/CartPage";
 import ScrollToTop from "./components/layout/ScrollToTop";
+
 
 function App() {
   return (
@@ -14,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/cart" element={<CartPage />} />
         <Route path="/:category" element={<CategoryPage />} />
       </Routes>
       <Footer />

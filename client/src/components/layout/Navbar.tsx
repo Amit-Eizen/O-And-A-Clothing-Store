@@ -61,7 +61,7 @@ const Navbar = () => {
                     </IconButton>
 
                     <IconButton size="small" component={Link} to="/cart">
-                        <Badge badgeContent={0} color="primary" sx={{ "& .MuiBadge-badge": { backgroundColor: "#c8a951" } }}> 
+                        <Badge badgeContent={3} color="primary" sx={{ "& .MuiBadge-badge": { backgroundColor: "#c8a951", fontSize: 11, minWidth: 16, height: 18 } }}>
                             <ShoppingBagOutLinedIcon sx={{ fontSize: 20 }} />
                         </Badge>
                     </IconButton>

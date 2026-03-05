@@ -54,20 +54,29 @@ client/src/
 │   │   ├── Footer.tsx          # Site footer
 │   │   └── ScrollToTop.tsx     # Scrolls to top on route change
 │   │
-│   └── products/
-│       ├── ProductCard.tsx     # Reusable product card (image, tags, name, price)
-│       └── FiltersDialog.tsx   # Filters & Sort dialog (sort, type, price, size, color)
+│   ├── products/
+│   │   ├── ProductCard.tsx     # Reusable product card (image, tags, name, price)
+│   │   └── FiltersDialog.tsx   # Filters & Sort dialog (sort, type, price, size, color)
+│   │
+│   └── cart/
+│       ├── CartItem.tsx        # Cart item card (image, info, quantity controls, remove)
+│       ├── OrderSummary.tsx    # Order summary sidebar (promo code, totals, checkout button)
+│       ├── CheckoutDialog.tsx  # Checkout popup (payment, shipping, contact, order summary)
+│       └── FormField.tsx       # Reusable labeled text field with error display
 │
 ├── pages/
 │   ├── AuthPage.tsx            # Login/Register page (split-screen layout)
 │   ├── HomePage.tsx            # Homepage (Hero + Categories + NewArrivals + Testimonial)
-│   └── CategoryPage.tsx        # Category page (breadcrumb, title, filters, product grid)
+│   ├── CategoryPage.tsx        # Category page (breadcrumb, title, filters, product grid)
+│   └── CartPage.tsx            # Shopping cart page (cart items + order summary + checkout)
 │
 ├── services/
 │   ├── api-client.ts           # Axios instance (base URL: localhost:3000)
 │   └── auth-service.ts         # API calls: loginUser, registerUser, googleSignIn
 │
-└── hooks/                      # Custom React hooks (empty, for future use)
+└── hooks/
+    ├── useCart.ts               # Cart state, item CRUD, price calculations
+    └── useCheckoutForm.ts      # Checkout form state, validation, input formatting
 ```
 
 ---
@@ -82,12 +91,14 @@ client/src/
   <Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/auth" element={<AuthPage />} />
+    <Route path="/cart" element={<CartPage />} />
     <Route path="/:category" element={<CategoryPage />} />
   </Routes>
   <Footer />
 </BrowserRouter>
 ```
 
+- `/cart` must be defined BEFORE `/:category` to avoid React Router treating "cart" as a category name
 - `/:category` handles `/women`, `/men`, `/accessories` with one component using `useParams`
 - `ScrollToTop` ensures page scrolls to top on navigation (uses `useLocation` + `useEffect`)
 - Navbar and Footer are always visible (outside Routes)
@@ -116,12 +127,25 @@ main.tsx
               │   │   ├── LoginForm → AuthForm wrapper
               │   │   └── RegisterForm → AuthForm wrapper
               │   │
-              │   └── CategoryPage
-              │       ├── Breadcrumb (Home / Category)
-              │       ├── Title + Subtitle
-              │       ├── Filters & Sort button → FiltersDialog
-              │       ├── Product Grid (uses ProductCard)
-              │       └── Load More button
+              │   ├── CategoryPage
+              │   │   ├── Breadcrumb (Home / Category)
+              │   │   ├── Title + Subtitle
+              │   │   ├── Filters & Sort button → FiltersDialog
+              │   │   ├── Product Grid (uses ProductCard)
+              │   │   └── Load More button
+              │   │
+              │   └── CartPage (uses useCart hook)
+              │       ├── Breadcrumb (Home / Shopping Cart)
+              │       ├── Title
+              │       ├── CartItem list (quantity controls, remove)
+              │       ├── Continue Shopping link
+              │       ├── OrderSummary (promo code, totals, checkout button)
+              │       └── CheckoutDialog (uses useCheckoutForm hook)
+              │           ├── Payment Information (FormField components)
+              │           ├── Shipping Information
+              │           ├── Contact Information
+              │           ├── Order Summary (totals)
+              │           └── Place Order / Cancel buttons
               │
               └── Footer
 ```
@@ -163,6 +187,51 @@ main.tsx
 - Listens to `useLocation` pathname changes
 - Calls `window.scrollTo(0, 0)` on every route change
 - Returns null (no visual output)
+
+### CartPage (uses `useCart` hook)
+- Two-column layout: cart items (flex: 2) + order summary (flex: 1)
+- Mock data with 3 items, managed via `useCart` custom hook
+- Computed values: subtotal, shipping (free if >= $150, otherwise $20), tax (8%), total
+- Checkout dialog opens from OrderSummary's "PROCEED TO CHECKOUT" button
+
+### CartItem
+- Bordered card with product image, type, name, size, color
+- Quantity controls (minus/plus IconButtons) with minimum of 1
+- Remove button (X icon) in top-right corner
+- Price displays `price × quantity`
+
+### OrderSummary
+- Promo code input + Apply button
+- Price breakdown: subtotal, shipping (green "Free" or price), tax, total
+- "PROCEED TO CHECKOUT" button (disabled when cart is empty via `isEmpty` prop)
+- Trust badges: free shipping, secure checkout, 30-day return policy
+
+### CheckoutDialog (uses `useCheckoutForm` hook)
+- MUI Dialog (500px wide, 90vh max height, 50% backdrop)
+- Sections: Payment Information, Shipping Information, Contact Information, Order Summary
+- Uses `FormField` reusable component for all text inputs
+- Form validation on "Place Order" - shows red error messages per field
+- Input formatting: card number (spaces every 4 digits, max 16), expiration date (auto slash, month 01-12), CVV (max 4 digits)
+- Form resets on close (Cancel, X, backdrop click)
+
+### FormField (Reusable)
+- Combines MUI Typography label + TextField into one component
+- Props: label, placeholder, value, error, onChange, mb
+- Shows red error text via TextField's `error` + `helperText` props
+
+### Custom Hooks
+
+**`useCart`** - Cart state management:
+- `cartItems` state with `updateQuantity` and `removeItem` functions
+- Computed: `subtotal`, `shipping`, `tax`, `total`
+- `checkoutOpen` state for checkout dialog
+
+**`useCheckoutForm`** - Checkout form logic:
+- `form` state (10 fields) + `errors` state
+- `handleChange(field)` - updates value + clears error + input formatting
+- `validate()` - checks all required fields, returns boolean
+- `handleSubmit(onClose)` - validates, resets form, closes dialog
+- `handleClose(onClose)` - resets form + errors, closes dialog
 
 ---
 
