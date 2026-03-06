@@ -32,12 +32,11 @@ describe("Products API Tests", () => {
                 .set("Authorization", `Bearer ${testUser.token}`)
                 .send({
                     name: "Classic T-Shirt",
-                    brand: "O&A",
+                    type: "T-Shirt",
                     description: "A comfortable classic cotton t-shirt",
                     price: 89.90,
                     salePrice: 69.90,
-                    category: "shirts",
-                    gender: "men",
+                    category: "men",
                     sizes: ["S", "M", "L", "XL"],
                     colors: ["black", "white", "navy"],
                     images: ["tshirt1.jpg", "tshirt2.jpg"],
@@ -48,11 +47,10 @@ describe("Products API Tests", () => {
             expect(res.status).toBe(201);
             expect(res.body).toHaveProperty("_id");
             expect(res.body.name).toBe("Classic T-Shirt");
-            expect(res.body.brand).toBe("O&A");
+            expect(res.body.type).toBe("T-Shirt");
             expect(res.body.price).toBe(89.90);
             expect(res.body.salePrice).toBe(69.90);
-            expect(res.body.category).toBe("shirts");
-            expect(res.body.gender).toBe("men");
+            expect(res.body.category).toBe("men");
             expect(res.body.sizes).toEqual(["S", "M", "L", "XL"]);
             expect(res.body.colors).toEqual(["black", "white", "navy"]);
             expect(res.body.stock).toBe(50);
@@ -64,11 +62,10 @@ describe("Products API Tests", () => {
                 .post("/products")
                 .send({
                     name: "Test Product",
-                    brand: "Test",
+                    type: "Shirt",
                     description: "Test description",
                     price: 100,
-                    category: "shirts",
-                    gender: "men",
+                    category: "men",
                     stock: 10
                 });
 
@@ -91,11 +88,10 @@ describe("Products API Tests", () => {
                 .set("Authorization", `Bearer ${regularUserToken}`)
                 .send({
                     name: "Test Product",
-                    brand: "Test",
+                    type: "Shirt",
                     description: "Test description",
                     price: 100,
-                    category: "shirts",
-                    gender: "men",
+                    category: "men",
                     stock: 10
                 });
 
@@ -112,17 +108,17 @@ describe("Products API Tests", () => {
             expect(res.body.length).toBeGreaterThan(0);
         });
 
-        test("should filter products by gender", async () => {
-            const res = await request(app).get("/products?gender=men");
+        test("should filter products by category", async () => {
+            const res = await request(app).get("/products?category=men");
 
             expect(res.status).toBe(200);
             expect(Array.isArray(res.body)).toBe(true);
             expect(res.body.length).toBeGreaterThan(0);
-            expect(res.body[0].gender).toBe("men");
+            expect(res.body[0].category).toBe("men");
         });
 
-        test("should return empty array for non-matching gender", async () => {
-            const res = await request(app).get("/products?gender=women");
+        test("should return empty array for non-matching category", async () => {
+            const res = await request(app).get("/products?category=women");
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual([]);
@@ -146,18 +142,18 @@ describe("Products API Tests", () => {
         });
     });
 
-    describe("GET /products/category/:category", () => {
-        test("should get products by category", async () => {
-            const res = await request(app).get("/products/category/shirts");
+    describe("GET /products/type/:type", () => {
+        test("should get products by type", async () => {
+            const res = await request(app).get("/products/type/T-Shirt");
 
             expect(res.status).toBe(200);
             expect(Array.isArray(res.body)).toBe(true);
             expect(res.body.length).toBeGreaterThan(0);
-            expect(res.body[0].category).toBe("shirts");
+            expect(res.body[0].type).toBe("T-Shirt");
         });
 
-        test("should return empty array for non-existent category", async () => {
-            const res = await request(app).get("/products/category/nonexistent");
+        test("should return empty array for non-existent type", async () => {
+            const res = await request(app).get("/products/type/nonexistent");
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual([]);
@@ -170,13 +166,6 @@ describe("Products API Tests", () => {
 
             expect(res.status).toBe(200);
             expect(Array.isArray(res.body)).toBe(true);
-            expect(res.body.length).toBeGreaterThan(0);
-        });
-
-        test("should search products by brand", async () => {
-            const res = await request(app).get("/products/search?q=O%26A");
-
-            expect(res.status).toBe(200);
             expect(res.body.length).toBeGreaterThan(0);
         });
 

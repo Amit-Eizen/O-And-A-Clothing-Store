@@ -27,12 +27,11 @@ beforeAll(async () => {
         .set("Authorization", `Bearer ${testUser.token}`)
         .send({
             name: "Test Shirt",
-            brand: "O&A",
+            type: "Shirt",
             description: "A test shirt",
             price: 99.90,
             salePrice: 79.90,
-            category: "shirts",
-            gender: "men",
+            category: "men",
             sizes: ["S", "M", "L"],
             colors: ["black", "white"],
             images: ["shirt1.jpg"],

@@ -13,16 +13,16 @@ const router = express.Router();
  *     summary: Get all products (supports filtering by query params)
  *     parameters:
  *       - in: query
- *         name: gender
- *         schema:
- *           type: string
- *           enum: [men, women, unisex]
- *         description: Filter by gender
- *       - in: query
  *         name: category
  *         schema:
  *           type: string
+ *           enum: [men, women, accessories]
  *         description: Filter by category
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filter by type
  *     responses:
  *       200:
  *         description: List of all products
@@ -66,7 +66,7 @@ router.get("/smart-search", searchController.smartSearch);
  *         required: true
  *         schema:
  *           type: string
- *         description: Search query (searches name, description, brand, tags)
+ *         description: Search query (searches name, description, tags)
  *     responses:
  *       200:
  *         description: List of matching products
@@ -79,24 +79,25 @@ router.get("/search", productsController.searchProducts.bind(productsController)
 
 /**
  * @swagger
- * /products/category/{category}:
+ * /products/type/{type}:
  *   get:
  *     tags: [Products]
- *     summary: Get products by category
+ *     summary: Get products by type
  *     parameters:
  *       - in: path
- *         name: category
+ *         name: type
  *         required: true
  *         schema:
  *           type: string
- *         description: Product category
+ *         description: Product type (e.g. Dress, Jacket, T-Shirt)
  *     responses:
  *       200:
- *         description: List of products in category
+ *         description: List of products by type
  *       500:
  *         description: Server error
  */
-router.get("/category/:category", productsController.getProductsByCategory.bind(productsController));
+router.get("/type/:type", productsController.getProductsByType.bind(productsController));
+
 
 /**
  * @swagger
@@ -137,16 +138,15 @@ router.get("/:id", productsController.getById.bind(productsController));
  *             type: object
  *             required:
  *               - name
- *               - brand
+ *               - type
  *               - description
  *               - price
  *               - category
- *               - gender
  *               - stock
  *             properties:
  *               name:
  *                 type: string
- *               brand:
+ *               type:
  *                 type: string
  *               description:
  *                 type: string
@@ -156,9 +156,7 @@ router.get("/:id", productsController.getById.bind(productsController));
  *                 type: number
  *               category:
  *                 type: string
- *               gender:
- *                 type: string
- *                 enum: [men, women, unisex]
+ *                 enum: [men, women, accessories]
  *               sizes:
  *                 type: array
  *                 items:
@@ -174,6 +172,10 @@ router.get("/:id", productsController.getById.bind(productsController));
  *               stock:
  *                 type: number
  *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               features:
  *                 type: array
  *                 items:
  *                   type: string
@@ -212,7 +214,7 @@ router.post("/", authenticate, authorizeAdmin, productsController.create.bind(pr
  *             properties:
  *               name:
  *                 type: string
- *               brand:
+ *               type:
  *                 type: string
  *               description:
  *                 type: string
@@ -222,9 +224,7 @@ router.post("/", authenticate, authorizeAdmin, productsController.create.bind(pr
  *                 type: number
  *               category:
  *                 type: string
- *               gender:
- *                 type: string
- *                 enum: [men, women, unisex]
+ *                 enum: [men, women, accessories]
  *               sizes:
  *                 type: array
  *                 items:
@@ -240,6 +240,10 @@ router.post("/", authenticate, authorizeAdmin, productsController.create.bind(pr
  *               stock:
  *                 type: number
  *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               features:
  *                 type: array
  *                 items:
  *                   type: string

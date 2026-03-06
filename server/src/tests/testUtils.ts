@@ -66,29 +66,29 @@ export const makeAdmin = async (userId: string) => {
 
 export const createTestProduct = async (overrides?: Partial<{
     name: string;
-    brand: string;
+    type: string;
     description: string;
     price: number;
     category: string;
-    gender: string;
     sizes: string[];
     colors: string[];
     images: string[];
     stock: number;
     tags: string[];
+    features: string[];
 }>) => {
     const product = await productsModel.create({
         name: "Test Product",
-        brand: "O&A",
+        type: "Shirt",
         description: "A test product",
         price: 99.9,
-        category: "shirts",
-        gender: "men",
+        category: "men",
         sizes: ["M"],
         colors: ["black"],
         images: ["test.jpg"],
         stock: 10,
         tags: ["test"],
+        features: [],
         ...overrides
     });
     return product;

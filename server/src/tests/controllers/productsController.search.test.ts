@@ -80,8 +80,8 @@ describe("SearchController - smartSearch Unit Tests", () => {
 
         test("should return 200 with products when search matches", async () => {
             const mockProducts = [
-                { _id: "1", name: "Red Summer Dress", price: 150, category: "dresses" },
-                { _id: "2", name: "Red Party Dress", price: 200, category: "dresses" }
+                { _id: "1", name: "Red Summer Dress", price: 150, type: "dresses" },
+                { _id: "2", name: "Red Party Dress", price: 200, type: "dresses" }
             ];
             mockRequest.query = { q: "red dress" };
             mockSearchService.smartSearch.mockResolvedValue(mockProducts);
