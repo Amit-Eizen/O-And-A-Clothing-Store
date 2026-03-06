@@ -2,6 +2,7 @@ import { Box, Typography, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
+import { Link } from "react-router-dom";
 
 interface CartItemProps {
     id: number;
@@ -12,20 +13,23 @@ interface CartItemProps {
     price: number;
     quantity: number;
     image: string;
+    category: string;
     onUpdateQuantity: (id: number, quantity: number) => void;
     onRemove: (id: number) => void;
 }
 
-const CartItem = ({ id, name, type, size, color, price, quantity, image, onUpdateQuantity, onRemove }: CartItemProps) => {
+const CartItem = ({ id, name, type, size, color, price, quantity, image, category, onUpdateQuantity, onRemove }: CartItemProps) => {
     return (
         <Box sx={{ display: "flex", gap: 3, p: 3, border: "1px solid #eee", borderRadius: 1, position: "relative" }}>
-            {/* Image */}
-            <Box
-                component="img"
-                src={image}
-                alt={name}
-                sx={{ width: 120, height: 120, objectFit: "cover", borderRadius: 1 }}
-            />
+             {/* Image */}
+            <Link to={`/${category}/${id}`}>
+                <Box
+                    component="img"
+                    src={image}
+                    alt={name}
+                    sx={{ width: 120, height: 120, objectFit: "cover", borderRadius: 1, cursor: "pointer" }}
+                />
+            </Link>
 
             {/* Info */}
              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>

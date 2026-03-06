@@ -2,17 +2,17 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IProduct extends Document {
     name: string;
-    brand: string;
+    type: string;
     description: string;
     price: number;
     salePrice?: number;
-    category: string;
+    category: "men" | "women" | "accessories";
     sizes: string[];
     colors: string[];
     images: string[];
     stock: number;
     tags: string[];
-    gender: "men" | "women" | "unisex";
+    features: string[];
 }
 
 const productSchema = new Schema<IProduct>(
@@ -22,7 +22,7 @@ const productSchema = new Schema<IProduct>(
             required: true 
         },
 
-        brand: { 
+        type: { 
             type: String, 
             required: true 
         },
@@ -43,6 +43,7 @@ const productSchema = new Schema<IProduct>(
 
         category: { 
             type: String, 
+            enum: ["men", "women", "accessories"],
             required: true 
         },
 
@@ -57,12 +58,7 @@ const productSchema = new Schema<IProduct>(
         },
 
         tags: [{ type: String }],
-
-        gender: {
-            type: String,
-            enum: ["men", "women", "unisex"],
-            required: true
-        }
+        features: [{ type: String }],
     },
     { timestamps: true }
 );

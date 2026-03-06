@@ -2,8 +2,8 @@ import llmService from "./llmService";
 import productsService from "../productsService";
 
 interface SearchFilters {
+    type?: string;
     category?: string;
-    gender?: string;
     color?: string;
     size?: string;
     minPrice?: number;
@@ -17,13 +17,13 @@ class SearchService {
         return `You are a search assistant for a clothing store called O&A.
         The user is searching for products. Extract search filters from their query.
 
-        Available categories: shirts, pants, shoes, jackets, dresses, accessories
-        Available genders: men, women, unisex
+        Available types: shirts, pants, shoes, jackets, dresses, accessories, t-shirts
+        Available categories: men, women, accessories
         Available sizes: XS, S, M, L, XL, XXL
 
         Return ONLY a valid JSON object with these optional fields:
-        - "category": string (one of the available categories)
-        - "gender": string (men, women, or unisex)
+        - "type": string (one of the available types)
+        - "category": string (men, women, or accessories)
         - "color": string (a color)
         - "size": string (one of the available sizes)
         - "minPrice": number
@@ -54,11 +54,11 @@ class SearchService {
 
         const mongoFilter: any = {};
 
+        if (filters.type) {
+            mongoFilter.type = filters.type;
+        }
         if (filters.category) {
             mongoFilter.category = filters.category;
-        }
-        if (filters.gender) {
-            mongoFilter.gender = filters.gender;
         }
         if (filters.color) {
             mongoFilter.colors = { $regex: filters.color, $options: "i" };
@@ -78,7 +78,6 @@ class SearchService {
             mongoFilter.$or = [
                 { name: { $regex: filters.query, $options: "i" } },
                 { description: { $regex: filters.query, $options: "i" } },
-                { brand: { $regex: filters.query, $options: "i" } }
             ];
         }
 

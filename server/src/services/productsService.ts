@@ -6,8 +6,8 @@ class ProductsService extends BaseService {
         super(productsModel);
     }
 
-    async getProductsByCategory(category: string) {
-        const products = await this.model.find({ category });
+    async getProductsByType(type: string) {
+        const products = await this.model.find({ type });
         return products;
     }
 
@@ -16,7 +16,6 @@ class ProductsService extends BaseService {
             $or: [
                 { name: { $regex: query, $options: "i" } },
                 { description: { $regex: query, $options: "i" } },
-                { brand: { $regex: query, $options: "i" } },
                 { tags: { $regex: query, $options: "i" } },
             ],
         });

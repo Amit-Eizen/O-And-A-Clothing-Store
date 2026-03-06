@@ -7,12 +7,12 @@ class ProductsController extends BaseController {
         super(productsService);
     }
 
-    async getProductsByCategory(req: Request, res: Response): Promise<void> {
+    async getProductsByType(req: Request, res: Response): Promise<void> {
         try {
-            const products = await productsService.getProductsByCategory(String(req.params.category));
+            const products = await productsService.getProductsByType(String(req.params.type));
             res.status(200).json(products);
         } catch (error) {
-            res.status(500).json({ error: "Failed to retrieve products by category" });
+            res.status(500).json({ error: "Failed to retrieve products by type" });
         }
     }
 
