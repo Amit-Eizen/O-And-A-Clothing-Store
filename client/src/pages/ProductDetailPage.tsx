@@ -125,6 +125,7 @@ const ProductDetailPage = () => {
                         product={product}
                         activeTab={activeTab}
                         onTabChange={setActiveTab}
+                        reviewsLink={`/${category}/${id}/reviews`}
                     />
                 </Box>
             </Box>

@@ -1,13 +1,15 @@
 import { Box, Typography, Rating, Button, LinearProgress } from "@mui/material";
+import { Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 interface ReviewsTabProps {
     rating: number;
     reviewCount: number;
     reviewBreakdown: { stars: number; percentage: number }[];
+    reviewsLink: string;
 }
 
-const ReviewsTab = ({ rating, reviewCount, reviewBreakdown }: ReviewsTabProps) => {
+const ReviewsTab = ({ rating, reviewCount, reviewBreakdown, reviewsLink }: ReviewsTabProps) => {
     return (
         <Box sx={{ py: 3 }}>
             {/* Overall Rating */}
@@ -53,6 +55,8 @@ const ReviewsTab = ({ rating, reviewCount, reviewBreakdown }: ReviewsTabProps) =
 
             {/* View All Reviews Button */}
             <Button
+                component={Link}
+                to={reviewsLink}
                 variant="outlined"
                 endIcon={<ArrowForwardIcon />}
                 sx={{
@@ -60,12 +64,13 @@ const ReviewsTab = ({ rating, reviewCount, reviewBreakdown }: ReviewsTabProps) =
                     color: "#c8a951",
                     fontSize: 13,
                     letterSpacing: 1,
+                    textDecoration: "none",
                     "&:hover": {
                         borderColor: "#b8993e",
                         backgroundColor: "rgba(200, 169, 81, 0.04)",
                     },
                 }}
-                >
+            >
                 VIEW ALL {reviewCount} REVIEWS
             </Button>
         </Box>
