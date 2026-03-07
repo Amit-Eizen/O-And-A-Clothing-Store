@@ -1,23 +1,26 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 class LLMService {
-    private model;
+    private model: any = null;
 
-    constructor() {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-        this.model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: 500,
-                responseMimeType: "application/json",
-            }
-        });
+    private getModel() {
+        if (!this.model) {
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+            this.model = genAI.getGenerativeModel({
+                model: "gemini-2.5-flash",
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 500,
+                    responseMimeType: "application/json",
+                }
+            });
+        }
+        return this.model;
     }
 
     async generateResponse(prompt: string): Promise<string> {
-         try {
-            const result = await this.model.generateContent(prompt);
+        try {
+            const result = await this.getModel().generateContent(prompt);
             return result.response.text();
         } catch (error) {
             console.error("Error generating response from LLM:", error);
@@ -27,4 +30,3 @@ class LLMService {
 }
 
 export default new LLMService();
-        

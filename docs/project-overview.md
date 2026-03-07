@@ -2,7 +2,7 @@
 
 ## About
 
-E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, shopping cart, and order management.
+E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, product reviews with comments, shopping cart, and order management.
 
 ## Project Structure
 
@@ -10,15 +10,16 @@ E-commerce clothing store with React frontend and Node.js backend. Features auth
 O-And-A-Clothing-Store/
 ├── client/                     # React frontend (Vite + TypeScript + MUI)
 │   ├── src/
-│   │   ├── pages/              # Page components (Auth, Home, Category, Cart)
+│   │   ├── pages/              # Page components (Auth, Home, Category, Cart, ProductDetail, Reviews, AISearch)
 │   │   ├── components/
 │   │   │   ├── auth/           # Login/Register forms
-│   │   │   ├── home/           # Homepage sections (Hero, Categories, NewArrivals, Testimonial)
+│   │   │   ├── home/           # Homepage sections (Hero, Categories, NewArrivals, Testimonial, AIStyleSection, SearchResults)
 │   │   │   ├── layout/         # Navbar, Footer, ScrollToTop
 │   │   │   ├── products/       # ProductCard, FiltersDialog
+│   │   │   ├── product-detail/ # ImageGallery (thumbnails + click-to-enlarge)
 │   │   │   └── cart/           # CartItem, OrderSummary, CheckoutDialog, FormField
 │   │   ├── services/           # API client + auth service
-│   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm)
+│   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm, useAISearch)
 │   │   ├── assets/             # Images
 │   │   ├── theme.ts            # MUI theme configuration
 │   │   ├── main.tsx            # Entry point

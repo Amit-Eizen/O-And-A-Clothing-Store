@@ -17,7 +17,7 @@ const Navbar = () => {
             <Toolbar sx={{ justifyContent: "space-between", maxWidth: "1280px", width: "100%", mx: "auto", px: { xs: 2, md: 4 }, minHeight: 56 }}>
                 {/* Logo */}
                 <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
-                    <Typography variant="h6" sx={{ fontFamily: "'Playfair Display', serif" }}>
+                    <Typography variant="h5" sx={{ fontFamily: "'Playfair Display', serif" }}>
                         <span style={{ fontWeight: "bold" }}>O&A</span>{""}
                         <span style={{ color: "#c8a951" }}>Clothes</span>
                     </Typography>
@@ -48,7 +48,7 @@ const Navbar = () => {
 
                 {/* Action Icons */}
                 <Box sx={{ display: "flex", gap: 1 }}>
-                    <IconButton size="small" >
+                    <IconButton size="small" component={Link} to="/search">
                         <SearchIcon sx={{ fontSize: 20 }}/>
                     </IconButton>
 

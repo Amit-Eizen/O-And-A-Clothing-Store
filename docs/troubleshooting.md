@@ -184,3 +184,56 @@ git merge main
 **Cause**: The installed version of `@react-oauth/google` (0.13.4) doesn't support the `locale` prop.
 
 **Solution**: Removed the `locale` prop. The button language follows the browser's language setting.
+
+---
+
+## 13. Gemini API key with quotes in `.env.dev`
+
+**Problem**: Smart search returned "API key not valid" error from Google Generative AI SDK, even though the same key worked fine in Google AI Studio (browser).
+
+**Cause**: The API key in `.env.dev` was wrapped in quotes:
+```
+GEMINI_API_KEY="AIzaSy..."
+```
+The `dotenv` library includes the quotes as part of the value itself, so the key sent to Google was `"AIzaSy..."` instead of `AIzaSy...`.
+
+**Solution**: Removed the quotes from the `.env.dev` file:
+```
+GEMINI_API_KEY=AIzaSy...
+```
+**Rule**: Never use quotes around values in `.env` files when using `dotenv`.
+
+---
+
+## 14. Gemini API key loaded as `undefined` — Lazy Initialization
+
+**Problem**: Even after fixing the quotes issue (#13), the Gemini API still returned "API key not valid". Adding `console.log(process.env.GEMINI_API_KEY)` inside the constructor showed `undefined`.
+
+**Cause**: `llmService.ts` exported a **pre-created instance**:
+```ts
+export default new LLMService();
+```
+The constructor ran immediately when the file was first imported — **before** `dotenv.config()` was called in `app.ts`. So `process.env.GEMINI_API_KEY` was `undefined` at that point.
+
+**Solution**: Changed from eager initialization in the constructor to **lazy initialization** with a `getModel()` method:
+```ts
+class LLMService {
+    private model: any = null;
+
+    private getModel() {
+        if (!this.model) {
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+            this.model = genAI.getGenerativeModel({ ... });
+        }
+        return this.model;
+    }
+
+    async generateResponse(prompt: string): Promise<string> {
+        const result = await this.getModel().generateContent(prompt);
+        return result.response.text();
+    }
+}
+```
+Now the API key is read only when the first search is performed — after `dotenv.config()` has already loaded the environment variables.
+
+**Lesson**: When using `export default new ClassName()`, the constructor runs at import time. If the class depends on environment variables loaded by `dotenv`, use lazy initialization instead.
