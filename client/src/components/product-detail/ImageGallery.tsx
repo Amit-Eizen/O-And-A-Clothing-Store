@@ -1,4 +1,5 @@
-import { Box } from "@mui/material";
+import { useState } from "react";
+import { Box, Dialog } from "@mui/material";
 
 interface ImageGalleryProps {
     images: { src: string; alt: string }[];
@@ -7,6 +8,7 @@ interface ImageGalleryProps {
 }
 
 const ImageGallery = ({ images, selectedIndex, onSelectIndex }: ImageGalleryProps) => {
+    const [fullImageOpen, setFullImageOpen] = useState(false);
     return (
         <Box>
             {/* Main Image */}
@@ -14,11 +16,13 @@ const ImageGallery = ({ images, selectedIndex, onSelectIndex }: ImageGalleryProp
                 component="img"
                 src={images[selectedIndex].src}
                 alt={images[selectedIndex].alt}
+                onClick={() => setFullImageOpen(true)}
                 sx={{
                     width: "90%",
                     height: 650,
                     objectFit: "cover",
                     borderRadius: 1,
+                    cursor: "pointer",
                 }}
             />
 
@@ -48,6 +52,20 @@ const ImageGallery = ({ images, selectedIndex, onSelectIndex }: ImageGalleryProp
                     />
                 ))}
             </Box>
+
+            {/* Full Image Dialog */}
+            <Dialog
+                open={fullImageOpen}
+                onClose={() => setFullImageOpen(false)}
+                maxWidth="lg"
+            >
+                <Box
+                    component="img"
+                    src={images[selectedIndex].src}
+                    alt={images[selectedIndex].alt}
+                    sx={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
+                />
+            </Dialog>
         </Box>
     );
 };

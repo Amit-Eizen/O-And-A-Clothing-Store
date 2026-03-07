@@ -6,6 +6,7 @@ import AuthPage from "./pages/AuthPage";
 import CategoryPage from "./pages/CategoryPage";
 import CartPage from "./pages/CartPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import ReviewsPage from "./pages/ReviewsPage";
 import ScrollToTop from "./components/layout/ScrollToTop";
 
 
@@ -18,6 +19,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/:category/:id/reviews" element={<ReviewsPage />} />
         <Route path="/:category/:id" element={<ProductDetailPage />} />
         <Route path="/:category" element={<CategoryPage />} />
       </Routes>

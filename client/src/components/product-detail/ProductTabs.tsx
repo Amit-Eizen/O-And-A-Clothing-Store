@@ -15,9 +15,10 @@ interface ProductTabsProps {
     };
     activeTab: number;
     onTabChange: (tab: number) => void;
+    reviewsLink: string;
 }
 
-const ProductTabs = ({ product, activeTab, onTabChange }: ProductTabsProps) => {
+const ProductTabs = ({ product, activeTab, onTabChange, reviewsLink }: ProductTabsProps) => {
     return (
         <Box>
             <Tabs
@@ -55,6 +56,7 @@ const ProductTabs = ({ product, activeTab, onTabChange }: ProductTabsProps) => {
                     rating={product.rating}
                     reviewCount={product.reviewCount}
                     reviewBreakdown={product.reviewBreakdown}
+                    reviewsLink={reviewsLink}
                 />
             )}
 
