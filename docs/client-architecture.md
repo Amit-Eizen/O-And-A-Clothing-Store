@@ -47,7 +47,9 @@ client/src/
 │   │   ├── HeroSection.tsx     # Full-width hero banner with CTA button
 │   │   ├── CategorySection.tsx # 3 category cards (Women, Men, Accessories)
 │   │   ├── NewArrivals.tsx     # Product grid using ProductCard component
-│   │   └── Testimonial.tsx     # Customer testimonial section
+│   │   ├── Testimonial.tsx     # Customer testimonial section
+│   │   ├── AIStyleSection.tsx  # AI search bar, suggestion chips, How It Works
+│   │   └── SearchResults.tsx   # AI search results grid with ProductCard
 │   │
 │   ├── layout/
 │   │   ├── Navbar.tsx          # Sticky top bar (logo, nav links, action icons)
@@ -57,6 +59,9 @@ client/src/
 │   ├── products/
 │   │   ├── ProductCard.tsx     # Reusable product card (image, tags, name, price)
 │   │   └── FiltersDialog.tsx   # Filters & Sort dialog (sort, type, price, size, color)
+│   │
+│   └── product-detail/
+│       └── ImageGallery.tsx    # Product images with thumbnail nav + click-to-enlarge
 │   │
 │   └── cart/
 │       ├── CartItem.tsx        # Cart item card (image, info, quantity controls, remove)
@@ -68,7 +73,10 @@ client/src/
 │   ├── AuthPage.tsx            # Login/Register page (split-screen layout)
 │   ├── HomePage.tsx            # Homepage (Hero + Categories + NewArrivals + Testimonial)
 │   ├── CategoryPage.tsx        # Category page (breadcrumb, title, filters, product grid)
-│   └── CartPage.tsx            # Shopping cart page (cart items + order summary + checkout)
+│   ├── CartPage.tsx            # Shopping cart page (cart items + order summary + checkout)
+│   ├── ProductDetailPage.tsx   # Product detail (images, info, add to cart)
+│   ├── ReviewsPage.tsx         # Product reviews with comments
+│   └── AISearchPage.tsx        # AI-powered smart search page
 │
 ├── services/
 │   ├── api-client.ts           # Axios instance (base URL: localhost:3000)
@@ -76,7 +84,8 @@ client/src/
 │
 └── hooks/
     ├── useCart.ts               # Cart state, item CRUD, price calculations
-    └── useCheckoutForm.ts      # Checkout form state, validation, input formatting
+    ├── useCheckoutForm.ts      # Checkout form state, validation, input formatting
+    └── useAISearch.ts          # AI search state, API call to smart-search endpoint
 ```
 
 ---
@@ -92,16 +101,21 @@ client/src/
     <Route path="/" element={<HomePage />} />
     <Route path="/auth" element={<AuthPage />} />
     <Route path="/cart" element={<CartPage />} />
+    <Route path="/:category/:id/reviews" element={<ReviewsPage />} />
+    <Route path="/:category/:id" element={<ProductDetailPage />} />
+    <Route path="/search" element={<AISearchPage />} />
     <Route path="/:category" element={<CategoryPage />} />
   </Routes>
   <Footer />
 </BrowserRouter>
 ```
 
-- `/cart` must be defined BEFORE `/:category` to avoid React Router treating "cart" as a category name
+- Static routes (`/cart`, `/search`, `/auth`) must be defined BEFORE `/:category` to avoid React Router treating them as category names
+- `/:category/:id/reviews` must be before `/:category/:id` (more specific first)
 - `/:category` handles `/women`, `/men`, `/accessories` with one component using `useParams`
 - `ScrollToTop` ensures page scrolls to top on navigation (uses `useLocation` + `useEffect`)
 - Navbar and Footer are always visible (outside Routes)
+- Navbar's search icon links to `/search` (AI search page)
 
 ---
 
@@ -134,18 +148,39 @@ main.tsx
               │   │   ├── Product Grid (uses ProductCard)
               │   │   └── Load More button
               │   │
-              │   └── CartPage (uses useCart hook)
-              │       ├── Breadcrumb (Home / Shopping Cart)
-              │       ├── Title
-              │       ├── CartItem list (quantity controls, remove)
-              │       ├── Continue Shopping link
-              │       ├── OrderSummary (promo code, totals, checkout button)
-              │       └── CheckoutDialog (uses useCheckoutForm hook)
-              │           ├── Payment Information (FormField components)
-              │           ├── Shipping Information
-              │           ├── Contact Information
-              │           ├── Order Summary (totals)
-              │           └── Place Order / Cancel buttons
+              │   ├── CartPage (uses useCart hook)
+              │   │   ├── Breadcrumb (Home / Shopping Cart)
+              │   │   ├── Title
+              │   │   ├── CartItem list (quantity controls, remove)
+              │   │   ├── Continue Shopping link
+              │   │   ├── OrderSummary (promo code, totals, checkout button)
+              │   │   └── CheckoutDialog (uses useCheckoutForm hook)
+              │   │       ├── Payment Information (FormField components)
+              │   │       ├── Shipping Information
+              │   │       ├── Contact Information
+              │   │       ├── Order Summary (totals)
+              │   │       └── Place Order / Cancel buttons
+              │   │
+              │   ├── ProductDetailPage
+              │   │   ├── ImageGallery (thumbnails + main image + click-to-enlarge)
+              │   │   └── Product info (name, price, description, add to cart)
+              │   │
+              │   ├── ReviewsPage
+              │   │   ├── Review cards (rating, title, content, likes)
+              │   │   └── Comments dialog per review
+              │   │
+              │   └── AISearchPage (uses useAISearch hook)
+              │       ├── AIStyleSection
+              │       │   ├── AI badge chip
+              │       │   ├── Title + subtitle
+              │       │   ├── Search bar (input + Search button)
+              │       │   ├── Suggestion chips (hidden after search)
+              │       │   └── How It Works section (hidden after search)
+              │       └── SearchResults (shown after search)
+              │           ├── Results header (icon + "Results for" + count)
+              │           ├── Product grid (uses ProductCard)
+              │           ├── Load More button
+              │           └── No results: "TRY ANOTHER SEARCH" button
               │
               └── Footer
 ```
@@ -219,7 +254,34 @@ main.tsx
 - Props: label, placeholder, value, error, onChange, mb
 - Shows red error text via TextField's `error` + `helperText` props
 
+### AISearchPage (uses `useAISearch` hook)
+- Dedicated page at `/search`, accessed via Navbar search icon
+- Combines `AIStyleSection` (search UI) + `SearchResults` (results grid)
+- `SearchResults` only shown after `hasSearched` becomes true
+
+### AIStyleSection
+- Gold "AI-Powered Virtual Stylist" chip badge
+- Title: "Your Personal Fashion Assistant" (Playfair Display serif)
+- Rounded search bar with search icon + gold "Search" button
+- Suggestion chips (e.g., "Summer vacation outfits") — click auto-fills AND triggers search
+- "How It Works" section with 3 steps (Describe, AI Curates, Shop)
+- Suggestions + How It Works are **hidden after search** (`hasSearched` prop)
+- Search triggers: click Search button, press Enter, or click a suggestion chip
+
+### SearchResults
+- Header: AutoAwesome icon + "Results for "{query}"" + product count
+- Product grid using `ProductCard` component (same as CategoryPage)
+- Loading state: gold `CircularProgress`
+- No results: "Didn't find what you're looking for?" + "TRY ANOTHER SEARCH" button (calls `clearResults`)
+- Error state: red error message text
+
 ### Custom Hooks
+
+**`useAISearch`** - AI search state management:
+- `query`, `results`, `isLoading`, `hasSearched`, `error` states
+- `search(query)` — calls `GET /products/smart-search?q={query}` via apiClient
+- `clearResults()` — resets all state to initial (brings back suggestions + How It Works)
+- `setQuery` — updates input text
 
 **`useCart`** - Cart state management:
 - `cartItems` state with `updateQuantity` and `removeItem` functions

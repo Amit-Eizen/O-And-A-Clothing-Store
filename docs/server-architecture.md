@@ -250,7 +250,7 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 
 ### Components
 
-- **LLMService** (`services/LLM/llmService.ts`): Gemini API client using `@google/generative-ai` SDK. Uses `gemini-2.5-flash` model with `temperature: 0.1` for consistent results, `responseMimeType: "application/json"`, `maxOutputTokens: 500`.
+- **LLMService** (`services/LLM/llmService.ts`): Gemini API client using `@google/generative-ai` SDK. Uses `gemini-2.5-flash` model with `temperature: 0.1` for consistent results, `responseMimeType: "application/json"`, `maxOutputTokens: 500`. Uses **lazy initialization** (`getModel()`) to avoid reading `process.env.GEMINI_API_KEY` before `dotenv.config()` runs (see troubleshooting #14).
 - **SearchService** (`services/LLM/searchService.ts`): Builds a prompt that instructs the LLM to extract filters. Parses the JSON response and builds a MongoDB filter object.
 - **SearchController** (`controllers/searchController.ts`): Handles `GET /products/smart-search?q=` endpoint.
 
