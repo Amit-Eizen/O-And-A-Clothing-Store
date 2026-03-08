@@ -14,40 +14,35 @@ export interface IUser {
     };
 }
 
-/* export const authService = {
-    login: (user: IUser) =>
-        apiClient.post('/login', { email: user.email, password: user.password }),
-
-    register: (data: { user : IUser}) => 
-        apiClient.post('/register', data)
-}; */
-
-export const loginUser = (user: IUser) => {
-    apiClient.post('/login', { email: user.email, password: user.password });
+const saveTokenInLocalStorage = (data: { token: string; refreshToken: string }) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("refreshToken", data.refreshToken);
 }
 
-export const registerUser = (data: { user : IUser}) => {
-    return new Promise<IUser>((resolve, reject) => {
-        console.log("Registering user with data:", data);
-        apiClient.post('/register', data).then(response => {
-            console.log(response);
-            resolve(response.data);
-        }).catch(error => {
-            console.error("Registration error:", error);
-            reject(error);
-        })
-    })
+export const loginUser = async (email: string, password: string) => {
+    const response = await apiClient.post('/login', { email, password });
+    saveTokenInLocalStorage(response.data);
+    return response.data;
+};
+
+export const registerUser = async (userData: IUser) => {
+    const response = await apiClient.post('/register', userData);
+    saveTokenInLocalStorage(response.data);
+    return response.data;
 }
 
-export const googleSignIn = (credentialResponse: CredentialResponse) => {
-    return new Promise((resolve, reject) => {
-        console.log("Google login successful");
-        apiClient.post('/google', credentialResponse).then(response => {
-            console.log(response);
-            resolve(response.data);
-        }).catch(error => {
-            console.error("Google login error:", error);
-            reject(error);
-        })
-    })
+export const googleSignIn = async (credentialResponse: CredentialResponse) => {
+    const response = await apiClient.post('/google', credentialResponse);
+    saveTokenInLocalStorage(response.data);
+    return response.data;
+}
+
+export const logoutUser = async () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken) {
+        await apiClient.post('/logout', { refreshToken });
+    }
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
 }

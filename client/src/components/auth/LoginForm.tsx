@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, Typography, TextField, Checkbox, FormControlLabel,
     IconButton, InputAdornment, Link } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import AuthForm from "./AuthForm";
+import { loginUser } from "../../services/auth-service";
 
 interface LoginFormProps {
     onSwitchToRegister: () => void;
 }
 
 const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
+    const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -35,10 +38,15 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!validate()) return;
 
-        console.log("Logging in with:", { email, password });
+        try {
+            await loginUser(email, password);
+            navigate("/");
+        } catch (error: any) {
+            setErrors({ email: error.response?.data?.message || "Login failed" });
+        }
     };
     
     return (

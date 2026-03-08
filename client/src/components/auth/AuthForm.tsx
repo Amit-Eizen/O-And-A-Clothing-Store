@@ -1,26 +1,29 @@
 import type { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, Button, Divider, Typography, Link } from "@mui/material";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { googleSignIn } from "../../services/auth-service";
 
 
 interface AuthFormProps {
-  children: ReactNode;
-  submitText: string;
-  onFormSubmit: () => void;
-  switchText: string;
-  switchLinkText: string;
-  onSwitchForm: () => void;
+    children: ReactNode;
+    submitText: string;
+    onFormSubmit: () => void;
+    switchText: string;
+    switchLinkText: string;
+    onSwitchForm: () => void;
 }
 
-const onGoogleLoginSuccess = async (credentialResponse: CredentialResponse) => {
-  console.log("Google login successful:", credentialResponse);
+const onGoogleLoginSuccess = async (credentialResponse: CredentialResponse, navigate: (path: string) => void) => {
+    console.log("Google login successful:", credentialResponse);
     try {
         const res = await googleSignIn(credentialResponse);
         console.log("Google sign in response:", res);
+        navigate("/");
     } catch (error) {
         console.error("Google sign in error:", error);
     }
+
 }
 
 const onGoogleLoginFailure = () => {
@@ -28,6 +31,7 @@ const onGoogleLoginFailure = () => {
 }
 
 const AuthForm = ({ children, submitText, onFormSubmit, switchText, switchLinkText, onSwitchForm }: AuthFormProps) => {
+  const navigate = useNavigate();
   return (
     <Box component="form" onSubmit={(e) => { e.preventDefault(); onFormSubmit(); }}>
         {children}  
@@ -35,18 +39,11 @@ const AuthForm = ({ children, submitText, onFormSubmit, switchText, switchLinkTe
           {submitText}
         </Button>   
         <Divider sx={{ my: 2 }}>OR</Divider>    
-        {/* <Button fullWidth variant="outlined" sx={{ py: 1.2, mb: 3, color: "#000", borderColor: "#e0e0e0" }}>
-          <img
-            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-            alt="Google"
-            style={{ width: 17, height: 17, marginRight: 8 }}
-          />
-          Continue with Google
-        </Button> */}
+
 
         {/* Google */}
         <GoogleLogin 
-            onSuccess={onGoogleLoginSuccess} 
+            onSuccess={(credential) => onGoogleLoginSuccess(credential, navigate)} 
             onError={onGoogleLoginFailure} 
             width= "450"
         /> 
