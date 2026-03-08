@@ -15,8 +15,13 @@ class CommentsService extends BaseService {
         const comments = await this.model
             .find({ userId }).sort({ createdAt: -1 })
             .populate('userId', 'username profileImage')
-            .populate('reviewId');
-
+            .populate({
+                path: 'reviewId',
+                populate: [
+                    {path: 'productId', select: 'name images price category'},
+                    {path: 'userId', select: 'username profileImage'}
+                ]
+            });
         return comments;
     }
 }

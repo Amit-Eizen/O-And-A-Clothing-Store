@@ -13,6 +13,7 @@
     "testReviews": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/reviews.test.ts",
     "testCart": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/cart.test.ts",
     "testOrders": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/orders.test.ts",
+    "testWishlist": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/wishlist.test.ts",
     "testLLMSearch": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/services/llmService.test.ts"
   },
   "keywords": [],

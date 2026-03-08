@@ -34,7 +34,10 @@ class OrdersService extends BaseService {
     }
 
     async getOrdersByUserId(userId: string) {
-        const orders = await this.model.find({ userId }).sort({ createdAt: -1 });
+        const orders = await this.model
+            .find({ userId })
+            .sort({ createdAt: -1 })
+            .populate("items.productId", "name images");
         return orders;
     }
 
