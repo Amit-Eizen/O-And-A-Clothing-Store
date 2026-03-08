@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Typography, TextField, Checkbox, FormControlLabel,
   IconButton, InputAdornment, Link } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import AuthForm from "./AuthForm";
+import { registerUser } from "../../services/auth-service";
 
 interface RegisterFormProps {
     onSwitchToLogin: () => void;
 }
 
 const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
+    const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -63,9 +66,15 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
         return Object.keys(newErrors).length === 0;
     }
 
-    const handleRegister = () => {
+    const handleRegister = async () => {
         if (!validate()) return;
-        console.log("Registering with:", { username, email, phoneNumber, password });
+
+        try {
+            await registerUser({ username, email, password, phoneNumber });
+            navigate("/");
+        } catch (error: any) {
+            setErrors({ email: error.response?.data?.message || "Registration failed" });
+        }
     };
 
     return (
