@@ -25,7 +25,7 @@ class ReviewsService extends BaseService {
         const review = await this.model
             .findById(id)
             .populate("userId", "username profileImage")
-            .populate("productId", "name images price");
+            .populate("productId", "name images price category");
         if (!review) return null;
 
         const commentCount = await commentsModel.countDocuments({ reviewId: id });
@@ -40,7 +40,7 @@ class ReviewsService extends BaseService {
             .skip(skip)
             .limit(limit)
             .populate("userId", "username profileImage")
-            .populate("productId", "name images price");
+            .populate("productId", "name images price category");
         const total = await this.model.countDocuments();
 
         const reviewsWithCount = await this.addCommentCounts(reviews);
@@ -51,7 +51,7 @@ class ReviewsService extends BaseService {
         const reviews = await this.model.find({ userId })
             .sort({ createdAt: -1 })
             .populate("userId", "username profileImage")
-            .populate("productId", "name images price");
+            .populate("productId", "name images price category");
 
         const reviewsWithCount = await this.addCommentCounts(reviews);
         return reviewsWithCount;
