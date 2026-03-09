@@ -52,7 +52,7 @@ const Navbar = () => {
                         <SearchIcon sx={{ fontSize: 20 }}/>
                     </IconButton>
 
-                    <IconButton size="small" >
+                    <IconButton size="small" component={Link} to="/account?section=wishlist">
                         <FavoriteBorderIcon sx={{ fontSize: 20 }} />
                     </IconButton>
 

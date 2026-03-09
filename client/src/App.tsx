@@ -9,25 +9,33 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import ReviewsPage from "./pages/ReviewsPage";
 import AISearchPage from "./pages/AISearchPage";
 import ScrollToTop from "./components/layout/ScrollToTop";
-
+import MyAccountPage from "./pages/MyAccountPage";
 
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/:category/:id/reviews" element={<ReviewsPage />} />
-        <Route path="/:category/:id" element={<ProductDetailPage />} />
-        <Route path="/search" element={<AISearchPage />} />
-        <Route path="/:category" element={<CategoryPage />} />
+        <Route path="*" element={
+          <>
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/:category/:id/reviews" element={<ReviewsPage />} />
+              <Route path="/:category/:id" element={<ProductDetailPage />} />
+              <Route path="/search" element={<AISearchPage />} />
+              <Route path="/account" element={<MyAccountPage />} />
+              <Route path="/:category" element={<CategoryPage />} />
+            </Routes>
+            <Footer />
+          </>
+        } />
       </Routes>
-      <Footer />
     </BrowserRouter>
   );
 }
+
 
 export default App;
