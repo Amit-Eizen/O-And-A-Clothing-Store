@@ -31,8 +31,13 @@ class UserController extends BaseController {
                 ? `${UPLOADS_PATH}/${req.file.filename}`
                 : undefined;
 
+            const body = { ...req.body };
+            if (typeof body.address === "string") {
+                body.address = JSON.parse(body.address);
+            }
+
             const user = await userService.updateProfile(req.userId!, {
-                ...req.body,
+                ...body,
                 profileImage
             });
 
