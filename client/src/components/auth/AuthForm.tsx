@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import useCart from "../../hooks/useCart";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Divider, Typography, Link } from "@mui/material";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
@@ -14,11 +15,12 @@ interface AuthFormProps {
     onSwitchForm: () => void;
 }
 
-const onGoogleLoginSuccess = async (credentialResponse: CredentialResponse, navigate: ReturnType<typeof useNavigate>) => {
+const onGoogleLoginSuccess = async (credentialResponse: CredentialResponse, navigate: ReturnType<typeof useNavigate>, syncAfterLogin: () => Promise<void>) => {
     console.log("Google login successful:", credentialResponse);
     try {
         const res = await googleSignIn(credentialResponse);
         console.log("Google sign in response:", res);
+        await syncAfterLogin();
         navigate(-1);
     } catch (error) {
         console.error("Google sign in error:", error);
@@ -32,6 +34,7 @@ const onGoogleLoginFailure = () => {
 
 const AuthForm = ({ children, submitText, onFormSubmit, switchText, switchLinkText, onSwitchForm }: AuthFormProps) => {
   const navigate = useNavigate();
+  const { syncAfterLogin } = useCart();
   return (
     <Box component="form" onSubmit={(e) => { e.preventDefault(); onFormSubmit(); }}>
         {children}  
@@ -43,7 +46,7 @@ const AuthForm = ({ children, submitText, onFormSubmit, switchText, switchLinkTe
 
         {/* Google */}
         <GoogleLogin 
-            onSuccess={(credential) => onGoogleLoginSuccess(credential, navigate)} 
+            onSuccess={(credential) => onGoogleLoginSuccess(credential, navigate, syncAfterLogin)} 
             onError={onGoogleLoginFailure} 
             width= "450"
         /> 

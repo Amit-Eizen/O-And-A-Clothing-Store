@@ -1,4 +1,5 @@
 import { useState } from "react";
+import useCart from "../../hooks/useCart";
 import { useNavigate } from "react-router-dom";
 import { Typography, TextField, Checkbox, FormControlLabel,
   IconButton, InputAdornment, Link } from "@mui/material";
@@ -12,6 +13,7 @@ interface RegisterFormProps {
 
 const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
     const navigate = useNavigate();
+    const { syncAfterLogin } = useCart();
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -71,6 +73,7 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
 
         try {
             await registerUser({ username, email, password, phoneNumber });
+            await syncAfterLogin();
             navigate(-1);
         } catch (error: any) {
             setErrors({ email: error.response?.data?.message || "Registration failed" });

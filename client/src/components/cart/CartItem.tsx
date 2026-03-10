@@ -5,7 +5,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { Link } from "react-router-dom";
 
 interface CartItemProps {
-    id: number;
+    productId: string;
     name: string;
     type: string;
     size: string;
@@ -14,15 +14,15 @@ interface CartItemProps {
     quantity: number;
     image: string;
     category: string;
-    onUpdateQuantity: (id: number, quantity: number) => void;
-    onRemove: (id: number) => void;
+    onUpdateQuantity: (productId: string, size: string, color: string, quantity: number) => void;
+    onRemove: (productId: string, size: string, color: string) => void;
 }
 
-const CartItem = ({ id, name, type, size, color, price, quantity, image, category, onUpdateQuantity, onRemove }: CartItemProps) => {
+const CartItem = ({ productId, name, type, size, color, price, quantity, image, category, onUpdateQuantity, onRemove }: CartItemProps) => {
     return (
         <Box sx={{ display: "flex", gap: 3, p: 3, border: "1px solid #eee", borderRadius: 1, position: "relative" }}>
              {/* Image */}
-            <Link to={`/${category}/${id}`}>
+            <Link to={`/${category}/${productId}`}>
                 <Box
                     component="img"
                     src={image}
@@ -48,7 +48,7 @@ const CartItem = ({ id, name, type, size, color, price, quantity, image, categor
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0, mt: 1 }}>
                     <IconButton
                         size="small"
-                        onClick={() => onUpdateQuantity(id, Math.max(1, quantity - 1))}
+                        onClick={() => onUpdateQuantity(productId, size, color, Math.max(1, quantity - 1))}
                         sx={{ border: "1px solid #ddd", borderRadius: 1, width: 32, height: 32 }}
                     >
                         <RemoveIcon sx={{ fontSize: 16 }} />
@@ -58,7 +58,7 @@ const CartItem = ({ id, name, type, size, color, price, quantity, image, categor
                     </Typography>
                     <IconButton
                         size="small"
-                        onClick={() => onUpdateQuantity(id, quantity + 1)}
+                        onClick={() => onUpdateQuantity(productId, size, color, quantity + 1)}
                         sx={{ border: "1px solid #ddd", borderRadius: 1, width: 32, height: 32 }}
                     >
                         <AddIcon sx={{ fontSize: 16 }} />
@@ -68,12 +68,12 @@ const CartItem = ({ id, name, type, size, color, price, quantity, image, categor
 
             {/* Price */}
             <Typography sx={{ fontWeight: 600, fontSize: 16, alignSelf: "flex-end" }}>
-                ${price * quantity}
+                ${ (price * quantity).toFixed(2) }
             </Typography>
 
             {/* Remove Button */}
             <IconButton
-                onClick={() => onRemove(id)}
+                onClick={() => onRemove(productId, size, color)}
                 sx={{ position: "absolute", top: 8, right: 8}}
                 size="small"
             >

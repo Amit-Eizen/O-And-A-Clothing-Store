@@ -33,6 +33,7 @@ const ProductDetailPage = () => {
 
     const handleAddToCart = () => {
         addItem({
+            productId: product.id.toString(),
             name: product.name,
             type: product.type,
             size: selectedSize,
@@ -40,7 +41,7 @@ const ProductDetailPage = () => {
             price: product.price,
             image: product.images[0].src,
             category: product.category,
-        });
+        }, quantity);
     };
 
     return (

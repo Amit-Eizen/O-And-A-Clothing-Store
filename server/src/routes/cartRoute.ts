@@ -128,6 +128,48 @@ router.delete("/items/:itemId", authenticate, cartController.removeItemFromCart)
 
 /**
  * @swagger
+ * /cart/merge:
+ *   post:
+ *     tags: [Cart]
+ *     summary: Merge guest cart with user cart after login
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     productId:
+ *                       type: string
+ *                     quantity:
+ *                       type: number
+ *                     size:
+ *                       type: string
+ *                     color:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Cart merged successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post("/merge", authenticate, cartController.mergeCart);
+
+/**
+ * @swagger
  * /cart:
  *   delete:
  *     tags: [Cart]

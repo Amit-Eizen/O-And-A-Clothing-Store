@@ -4,6 +4,7 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import PersonOutLineIcon from "@mui/icons-material/PersonOutline";
 import ShoppingBagOutLinedIcon from "@mui/icons-material/ShoppingBagOutlined";
 import { Link } from "react-router-dom";
+import useCart from "../../hooks/useCart";
 
 const navLinks = [
     { label: "Women", path: "/women" },
@@ -12,6 +13,8 @@ const navLinks = [
 ];
 
 const Navbar = () => {
+    const { itemCount } = useCart();
+
     return (
         <AppBar position="sticky" elevation={0} sx={{ backgroundColor: "#fff", color: "#000"}}>
             <Toolbar sx={{ justifyContent: "space-between", maxWidth: "1280px", width: "100%", mx: "auto", px: { xs: 2, md: 4 }, minHeight: 56 }}>
@@ -61,7 +64,7 @@ const Navbar = () => {
                     </IconButton>
 
                     <IconButton size="small" component={Link} to="/cart">
-                        <Badge badgeContent={3} color="primary" sx={{ "& .MuiBadge-badge": { backgroundColor: "#c8a951", fontSize: 11, minWidth: 16, height: 18 } }}>
+                        <Badge badgeContent={itemCount} color="primary" sx={{ "& .MuiBadge-badge": { backgroundColor: "#c8a951", fontSize: 11, minWidth: 16, height: 18 } }}>
                             <ShoppingBagOutLinedIcon sx={{ fontSize: 20 }} />
                         </Badge>
                     </IconButton>
