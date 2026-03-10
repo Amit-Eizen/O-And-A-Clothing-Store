@@ -71,7 +71,7 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
 
         try {
             await registerUser({ username, email, password, phoneNumber });
-            navigate("/");
+            navigate(-1);
         } catch (error: any) {
             setErrors({ email: error.response?.data?.message || "Registration failed" });
         }
@@ -85,7 +85,10 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
             switchLinkText="Sign In"
             onSwitchForm={onSwitchToLogin}
         >
-            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>Username</Typography>
+            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>
+                Username
+            </Typography>
+
             <TextField 
                 fullWidth placeholder="Enter your username" 
                 size="small" value={username} 
@@ -95,7 +98,9 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
                 sx={{ mb: 2 }} 
             />
 
-            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>Email</Typography>
+            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>
+                Email
+            </Typography>
             <TextField 
                 fullWidth placeholder="Enter your email" 
                 size="small" value={email} 
@@ -105,7 +110,10 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
                 sx={{ mb: 2 }} 
             />
 
-            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>Phone Number</Typography>
+            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>
+                Phone Number
+            </Typography>
+
             <TextField 
                 fullWidth placeholder="+972 50 123 4567" 
                 size="small" value={phoneNumber} 
@@ -115,7 +123,10 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
                 sx={{ mb: 2 }} 
             />
 
-            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>Password</Typography>
+            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>
+                Password
+            </Typography>
+
             <TextField
                 fullWidth
                 placeholder="Enter your password"
@@ -139,7 +150,10 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
                 }}
             />
 
-            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>Confirm Password</Typography>
+            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>
+                Confirm Password
+            </Typography>
+
             <TextField 
                 fullWidth placeholder="Confirm your password" 
                 type= "password" size="small"  

@@ -14,12 +14,12 @@ interface AuthFormProps {
     onSwitchForm: () => void;
 }
 
-const onGoogleLoginSuccess = async (credentialResponse: CredentialResponse, navigate: (path: string) => void) => {
+const onGoogleLoginSuccess = async (credentialResponse: CredentialResponse, navigate: ReturnType<typeof useNavigate>) => {
     console.log("Google login successful:", credentialResponse);
     try {
         const res = await googleSignIn(credentialResponse);
         console.log("Google sign in response:", res);
-        navigate("/");
+        navigate(-1);
     } catch (error) {
         console.error("Google sign in error:", error);
     }
@@ -38,7 +38,7 @@ const AuthForm = ({ children, submitText, onFormSubmit, switchText, switchLinkTe
         <Button fullWidth variant="contained" onClick={onFormSubmit} sx={{ bgcolor: "#000", color: "#fff", py: 1.5, mb: 2, "&:hover": { bgcolor: "#333" } }}>
           {submitText}
         </Button>   
-        <Divider sx={{ my: 2 }}>OR</Divider>    
+        <Divider sx={{ my: 2 }}> OR </Divider>    
 
 
         {/* Google */}
