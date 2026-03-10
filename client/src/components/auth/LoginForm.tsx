@@ -43,7 +43,7 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
 
         try {
             await loginUser(email, password);
-            navigate("/");
+            navigate(-1);
         } catch (error: any) {
             setErrors({ email: error.response?.data?.message || "Login failed" });
         }
@@ -57,7 +57,10 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
             switchLinkText="Register"
             onSwitchForm={onSwitchToRegister}
         >
-            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>Email</Typography>
+            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>
+                Email
+            </Typography>
+
             <TextField 
                 fullWidth 
                 placeholder="Enter your email" 
@@ -69,7 +72,10 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
                 sx={{ mb: 2 }} 
             />
 
-            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>Password</Typography>
+            <Typography fontWeight="bold" sx={{mb:1, mt:1}}>
+                Password
+            </Typography>
+
             <TextField
                 fullWidth
                 placeholder="Enter your password"
@@ -96,7 +102,9 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
 
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
                 <FormControlLabel control={<Checkbox size="small" />} label="Remember me" />
-                <Link href="#" sx={{ color: "#c8a951", textDecoration: "none" }}>Forgot Password?</Link>
+                <Link href="#" sx={{ color: "#c8a951", textDecoration: "none" }}>
+                    Forgot Password?
+                </Link>
             </Box>
         </AuthForm>
     );
