@@ -51,10 +51,21 @@ const clearCart = async (req: AuthRequest, res: Response) => {
     }
 };
 
+const mergeCart = async (req: AuthRequest, res: Response) => {
+    try {
+        const { items } = req.body;
+        const cart = await cartService.mergeCart(req.userId!, items);
+        res.status(200).json(cart);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to merge cart" });
+    }
+};
+
 export default {
     getCartByUserId,
     addItemToCart,
     updateItemQuantity,
     removeItemFromCart,
-    clearCart
+    clearCart,
+    mergeCart
 };

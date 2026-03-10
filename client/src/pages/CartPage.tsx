@@ -1,14 +1,17 @@
-import { Link } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CartItem from "../components/cart/CartItem";
 import OrderSummary from "../components/cart/OrderSummary";
 import CheckoutDialog from "../components/cart/CheckoutDialog";
 import useCart from "../hooks/useCart";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const CartPage = () => {
-    const { cartItems, checkoutOpen, setCheckoutOpen, updateQuantity, 
-        removeItem, subtotal, shipping, tax, total } = useCart();
+    const { cartItems, updateItemQuantity, removeItem, 
+        subtotal, shipping, tax, total } = useCart();
+    const [checkoutOpen, setCheckoutOpen] = useState(false);
+    const navigate = useNavigate();
 
     return (
         <Box>
@@ -30,13 +33,18 @@ const CartPage = () => {
                 <Box sx={{ display: "flex", gap: 4, flexDirection: { xs: "column", md: "row" } }}>
                     <Box sx={{ flex: 2, display: "flex", flexDirection: "column", gap: 3 }}>
                         {cartItems.map((item) => (
-                            <CartItem key={item.id} {...item} onUpdateQuantity={updateQuantity} onRemove={removeItem} />
+                            <CartItem 
+                                key={`${item.productId}-${item.size}-${item.color}`} 
+                                {...item} 
+                                onUpdateQuantity={updateItemQuantity} 
+                                onRemove={removeItem} 
+                            />
                         ))}
 
-                        <Link to="/" style={{ textDecoration: "none", color: "#000", display: "flex", alignItems: "center", gap: 4, marginTop: 8 }}>
+                        <Box onClick={() => navigate(-1)} style={{ textDecoration: "none", color: "#000", display: "flex", alignItems: "center", gap: 4, marginTop: 8 }}>
                             <ArrowBackIcon sx={{ fontSize: 18 }} />
                             <Typography sx={{ fontSize: 13, fontWeight: 500 }}>Continue Shopping</Typography>
-                        </Link>
+                        </Box>
                     </Box>
 
                     <Box sx={{ flex: 1 }}>

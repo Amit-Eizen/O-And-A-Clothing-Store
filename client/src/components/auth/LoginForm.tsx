@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useCart from "../../hooks/useCart";
 import { Box, Typography, TextField, Checkbox, FormControlLabel,
     IconButton, InputAdornment, Link } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -12,6 +13,7 @@ interface LoginFormProps {
 
 const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
     const navigate = useNavigate();
+    const { syncAfterLogin } = useCart();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +45,7 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
 
         try {
             await loginUser(email, password);
+            await syncAfterLogin();
             navigate(-1);
         } catch (error: any) {
             setErrors({ email: error.response?.data?.message || "Login failed" });

@@ -8,7 +8,7 @@ class CartService extends BaseService {
         super(cartModel);
     }
 
-     async getCartByUserId(userId: string) {
+    async getCartByUserId(userId: string) {
         const cart = await cartModel.findOne({ userId });
         return cart;
     }
@@ -38,7 +38,7 @@ class CartService extends BaseService {
         return cart;
     }
 
-     async updateItemQuantity(userId: string, itemId: string, quantity: number) {
+    async updateItemQuantity(userId: string, itemId: string, quantity: number) {
         const cart = await cartModel.findOne({ userId });
         if (!cart) throw "Cart not found";
 
@@ -65,6 +65,33 @@ class CartService extends BaseService {
             { items: [] },
             { new: true }
         );
+        return cart;
+    }
+
+    async mergeCart(userId: string, items: ICartItem[]) {
+        let cart = await cartModel.findOne({ userId });
+
+        if (!cart) {
+            cart = await cartModel.create({ userId, items });
+            return cart;
+        }
+
+        for (const item of items) {
+            const existingItem = cart.items.find(
+                (i: ICartItem) =>
+                    i.productId.toString() === item.productId.toString() &&
+                    i.size === item.size &&
+                    i.color === item.color
+            );
+
+            if (existingItem) {
+                existingItem.quantity += item.quantity;
+            } else {
+                cart.items.push(item);
+            }
+        }
+
+        await cart.save();
         return cart;
     }
 }
