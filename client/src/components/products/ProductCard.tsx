@@ -2,7 +2,7 @@ import { Box, Typography, Chip } from "@mui/material";
 import { Link } from "react-router-dom";
 
 interface ProductCardProps {
-    id: number;
+    id: string;
     name: string;
     type: string;
     price: number;

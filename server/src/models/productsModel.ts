@@ -11,6 +11,7 @@ export interface IProduct extends Document {
     colors: string[];
     images: string[];
     stock: number;
+    soldCount: number;
     tags: string[];
     features: string[];
 }
@@ -51,10 +52,15 @@ const productSchema = new Schema<IProduct>(
         colors: [{ type: String }],
         images: [{ type: String }],
         
-        stock: { 
-            type: Number, 
-            required: true, 
-            default: 0 
+        stock: {
+            type: Number,
+            required: true,
+            default: 0
+        },
+
+        soldCount: {
+            type: Number,
+            default: 0
         },
 
         tags: [{ type: String }],

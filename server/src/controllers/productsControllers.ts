@@ -29,6 +29,43 @@ class ProductsController extends BaseController {
             res.status(500).json({ error: "Failed to search products" });
         }
     }
-}
+
+    async getFilteredProducts(req: Request, res: Response): Promise<void> {
+        try {
+            const query = req.query;
+            const params: any = {};
+
+            const paramRules = [
+                { name: "category",  type: "string" },
+                { name: "sort",      type: "string" },
+                { name: "type",      type: "array" },
+                { name: "sizes",     type: "array" },
+                { name: "colors",    type: "array" },
+                { name: "minPrice",  type: "number" },
+                { name: "maxPrice",  type: "number" },
+                { name: "page",      type: "number" },
+                { name: "limit",     type: "number" },
+            ];
+
+            for (const rule of paramRules) {
+                const value = query[rule.name];
+                if (!value) continue;
+
+                if (rule.type === "string") {
+                    params[rule.name] = value;
+                } else if (rule.type === "array") {
+                    params[rule.name] = (value as string).split(",");
+                } else if (rule.type === "number") {
+                    params[rule.name] = Number(value);
+                }
+            }
+
+            const result = await productsService.getFilteredProducts(params);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(500).json({ error: "Error filtering products" });
+        }
+    }
+}   
 
 export default new ProductsController();

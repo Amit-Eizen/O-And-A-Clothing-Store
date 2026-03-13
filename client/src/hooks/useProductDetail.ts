@@ -1,19 +1,73 @@
 import { useState, useEffect } from "react";
-import product1 from "../assets/product-1.jpg";
-import product2 from "../assets/product-2.jpg";
-import product3 from "../assets/product-3.jpg";
-import product4 from "../assets/product-4.jpg";
+import apiClient from "../services/api-client";
+import type { ProductFromServer } from "../services/products-api";
 
-interface ProductDetail {
-    id: number;
+const colorMap: Record<string, string> = {
+    black: "#000000",
+    white: "#FFFFFF",
+    navy: "#1a237e",
+    blue: "#1565c0",
+    red: "#c62828",
+    green: "#2e7d32",
+    brown: "#5d4037",
+    beige: "#d4c5a9",
+    cream: "#f5f5dc",
+    grey: "#9e9e9e",
+    gray: "#9e9e9e",
+    pink: "#e91e63",
+    gold: "#c8a951",
+    silver: "#bdbdbd",
+    tan: "#d2b48c",
+    olive: "#6b8e23",
+    burgundy: "#800020",
+    camel: "#c19a6b",
+    ivory: "#fffff0",
+    coral: "#ff6f61",
+    charcoal: "#36454f",
+    khaki: "#c3b091",
+    denim: "#1560bd",
+    taupe: "#483c32",
+    wine: "#722f37",
+    mustard: "#e1ad01",
+    lavender: "#b57edc",
+    teal: "#008080",
+    rust: "#b7410e",
+    stone: "#928e85",
+    chocolate: "#7b3f00",
+    nude: "#e3bc9a",
+    mauve: "#915f6d",
+    sage: "#b2ac88",
+    copper: "#b87333",
+    pewter: "#8e8e8e",
+    tortoise: "#8b4513",
+};
+
+function getColorValue(colorName: string): string {
+    const lower = colorName.toLowerCase();
+    if (colorMap[lower]) {
+        return colorMap[lower];
+    }
+
+    // Try partial match (e.g. "Light Blue" contains "blue")
+    for (const [key, value] of Object.entries(colorMap)) {
+        if (lower.includes(key)) {
+            return value;
+        }
+    }
+
+    return "#cccccc";
+}
+
+export interface ProductDetail {
+    id: string;
     name: string;
     type: string;
     price: number;
     oldPrice?: number;
     rating: number;
     reviewCount: number;
-    images: {src: string; alt: string}[];
-    colors: {name: string; value: string; imageIndex: number}[];
+    images: { src: string; alt: string }[];
+    colors: { name: string; value: string; imageIndex: number }[];
     sizes: string[];
     stock: number;
     category: string;
@@ -24,308 +78,97 @@ interface ProductDetail {
     returnsInfo: string;
 }
 
-const mockProducts: ProductDetail[] = [
-    {
-        id: 1,
-        name: "Premium Tee",
-        type: "T-Shirt",
-        price: 55,
-        oldPrice: 75,
-        rating: 4.8,
-        reviewCount: 345,
-        images: [
-            { src: product1, alt: "Premium Tee - Front" },
-            { src: product2, alt: "Premium Tee - Back" },
-            { src: product3, alt: "Premium Tee - Side" },
-            { src: product4, alt: "Premium Tee - Detail" },
-        ],
-        colors: [
-            { name: "White", value: "#FFFFFF", imageIndex: 0 },
-            { name: "Black", value: "#000000", imageIndex: 1 },
-            { name: "Grey Heather", value: "#B0B0B0", imageIndex: 2 },
-        ],
-        sizes: ["S", "M", "L", "XL", "XXL"],
-        stock: 8,
-        category: "unisex",
-        description: "Elevate your everyday wardrobe with our Premium Tee. Crafted from 100% organic Pima cotton, this essential piece offers an unparalleled combination of softness, durability, and timeless style. The relaxed yet refined fit makes it perfect for both casual outings and layered looks.",
-        features: [
-            "100% Organic Pima Cotton",
-            "Pre-shrunk fabric maintains shape",
-            "Reinforced collar and cuffs",
-            "Tagless design for ultimate comfort",
-            "Available in 3 colorways",
-        ],
-        reviewBreakdown: [
-            { stars: 5, percentage: 72 },
-            { stars: 4, percentage: 18 },
-            { stars: 3, percentage: 6 },
-            { stars: 2, percentage: 3 },
-            { stars: 1, percentage: 1 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days. Express shipping available at checkout for 1-2 business day delivery.",
-        returnsInfo: "We offer a 30-day return policy for all unworn items in original condition with tags attached. Free returns on all domestic orders. Exchanges are subject to availability.",
-    },
-        {
-        id: 2,
-        name: "Cashmere Sweater",
-        type: "Jacket",
-        price: 289,
-        oldPrice: 350,
-        rating: 4.5,
-        reviewCount: 210,
-        images: [
-            { src: product2, alt: "Cashmere Sweater - Front" },
-            { src: product3, alt: "Cashmere Sweater - Back" },
-            { src: product1, alt: "Cashmere Sweater - Side" },
-            { src: product4, alt: "Cashmere Sweater - Detail" },
-        ],
-        colors: [
-            { name: "Burgundy", value: "#800020", imageIndex: 0 },
-            { name: "Cream", value: "#FFFDD0", imageIndex: 1 },
-        ],
-        sizes: ["S", "M", "L", "XL"],
-        stock: 5,
-        category: "women",
-        description: "Luxuriously soft cashmere sweater perfect for layering. This timeless piece features a relaxed fit and ribbed detailing at the cuffs and hem.",
-        features: ["100% Pure Cashmere", "Ribbed cuffs and hem", "Relaxed fit", "Dry clean only"],
-        reviewBreakdown: [
-            { stars: 5, percentage: 65 },
-            { stars: 4, percentage: 22 },
-            { stars: 3, percentage: 8 },
-            { stars: 2, percentage: 3 },
-            { stars: 1, percentage: 2 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days.",
-        returnsInfo: "30-day return policy for unworn items in original condition with tags attached.",
-    },
-    {
-        id: 3,
-        name: "Tailored Blazer",
-        type: "Jacket",
-        price: 425,
-        rating: 4.9,
-        reviewCount: 128,
-        images: [
-            { src: product3, alt: "Tailored Blazer - Front" },
-            { src: product1, alt: "Tailored Blazer - Back" },
-            { src: product2, alt: "Tailored Blazer - Side" },
-            { src: product4, alt: "Tailored Blazer - Detail" },
-        ],
-        colors: [
-            { name: "Navy", value: "#000080", imageIndex: 0 },
-            { name: "Black", value: "#000000", imageIndex: 1 },
-        ],
-        sizes: ["XS", "S", "M", "L"],
-        stock: 3,
-        category: "women",
-        description: "A perfectly structured blazer that transitions seamlessly from office to evening. Crafted with premium wool blend for a refined silhouette.",
-        features: ["Wool blend fabric", "Fully lined", "Two-button closure", "Functional pockets"],
-        reviewBreakdown: [
-            { stars: 5, percentage: 80 },
-            { stars: 4, percentage: 14 },
-            { stars: 3, percentage: 4 },
-            { stars: 2, percentage: 1 },
-            { stars: 1, percentage: 1 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days.",
-        returnsInfo: "30-day return policy for unworn items in original condition with tags attached.",
-    },
-    {
-        id: 4,
-        name: "Wide Leg Trousers",
-        type: "Pants",
-        price: 195,
-        rating: 4.6,
-        reviewCount: 89,
-        images: [
-            { src: product4, alt: "Wide Leg Trousers - Front" },
-            { src: product1, alt: "Wide Leg Trousers - Back" },
-            { src: product2, alt: "Wide Leg Trousers - Side" },
-            { src: product3, alt: "Wide Leg Trousers - Detail" },
-        ],
-        colors: [
-            { name: "Black", value: "#000000", imageIndex: 0 },
-            { name: "Beige", value: "#F5F5DC", imageIndex: 1 },
-        ],
-        sizes: ["XS", "S", "M", "L", "XL"],
-        stock: 12,
-        category: "women",
-        description: "Elegant wide leg trousers with a high waist and flowing silhouette. Perfect for creating a sophisticated, elongated look.",
-        features: ["High-rise waist", "Wide leg cut", "Side zip closure", "Wrinkle-resistant fabric"],
-        reviewBreakdown: [
-            { stars: 5, percentage: 60 },
-            { stars: 4, percentage: 25 },
-            { stars: 3, percentage: 10 },
-            { stars: 2, percentage: 3 },
-            { stars: 1, percentage: 2 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days.",
-        returnsInfo: "30-day return policy for unworn items in original condition with tags attached.",
-    },
-    {
-        id: 5,
-        name: "Linen Shirt",
-        type: "Shirt",
-        price: 175,
-        rating: 4.4,
-        reviewCount: 156,
-        images: [
-            { src: product1, alt: "Linen Shirt - Front" },
-            { src: product4, alt: "Linen Shirt - Back" },
-            { src: product2, alt: "Linen Shirt - Side" },
-            { src: product3, alt: "Linen Shirt - Detail" },
-        ],
-        colors: [
-            { name: "White", value: "#FFFFFF", imageIndex: 0 },
-            { name: "Light Blue", value: "#ADD8E6", imageIndex: 1 },
-        ],
-        sizes: ["S", "M", "L", "XL"],
-        stock: 15,
-        category: "women",
-        description: "A breezy linen shirt that embodies effortless elegance. Perfect for warm-weather styling with a relaxed, oversized fit.",
-        features: ["100% European Linen", "Oversized relaxed fit", "Mother-of-pearl buttons", "Pre-washed for softness"],
-        reviewBreakdown: [
-            { stars: 5, percentage: 55 },
-            { stars: 4, percentage: 28 },
-            { stars: 3, percentage: 10 },
-            { stars: 2, percentage: 5 },
-            { stars: 1, percentage: 2 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days.",
-        returnsInfo: "30-day return policy for unworn items in original condition with tags attached.",
-    },
-    {
-        id: 6,
-        name: "Wrap Dress",
-        type: "Dress",
-        price: 155,
-        rating: 4.7,
-        reviewCount: 234,
-        images: [
-            { src: product2, alt: "Wrap Dress - Front" },
-            { src: product1, alt: "Wrap Dress - Back" },
-            { src: product3, alt: "Wrap Dress - Side" },
-            { src: product4, alt: "Wrap Dress - Detail" },
-        ],
-        colors: [
-            { name: "Forest Green", value: "#228B22", imageIndex: 0 },
-            { name: "Black", value: "#000000", imageIndex: 1 },
-            { name: "Wine", value: "#722F37", imageIndex: 2 },
-        ],
-        sizes: ["XS", "S", "M", "L", "XL"],
-        stock: 9,
-        category: "women",
-        description: "A flattering wrap dress that suits every body type. The adjustable tie waist creates a beautiful silhouette while the V-neckline adds elegance.",
-        features: ["Wrap-front design", "Adjustable tie waist", "Knee-length hem", "Machine washable"],
-        reviewBreakdown: [
-            { stars: 5, percentage: 68 },
-            { stars: 4, percentage: 20 },
-            { stars: 3, percentage: 7 },
-            { stars: 2, percentage: 3 },
-            { stars: 1, percentage: 2 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days.",
-        returnsInfo: "30-day return policy for unworn items in original condition with tags attached.",
-    },
-    {
-        id: 7,
-        name: "Denim Jacket",
-        type: "Jacket",
-        price: 205,
-        rating: 4.3,
-        reviewCount: 178,
-        images: [
-            { src: product3, alt: "Denim Jacket - Front" },
-            { src: product4, alt: "Denim Jacket - Back" },
-            { src: product1, alt: "Denim Jacket - Side" },
-            { src: product2, alt: "Denim Jacket - Detail" },
-        ],
-        colors: [
-            { name: "Classic Blue", value: "#4169E1", imageIndex: 0 },
-            { name: "Light Wash", value: "#B0C4DE", imageIndex: 1 },
-        ],
-        sizes: ["S", "M", "L", "XL"],
-        stock: 7,
-        category: "women",
-        description: "A timeless denim jacket with a modern cut. Features premium stretch denim for comfort and a versatile style that pairs with everything.",
-        features: ["Premium stretch denim", "Classic collar design", "Metal button closure", "Two chest pockets"],
-        reviewBreakdown: [
-            { stars: 5, percentage: 50 },
-            { stars: 4, percentage: 30 },
-            { stars: 3, percentage: 12 },
-            { stars: 2, percentage: 5 },
-            { stars: 1, percentage: 3 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days.",
-        returnsInfo: "30-day return policy for unworn items in original condition with tags attached.",
-    },
-    {
-        id: 8,
-        name: "High Waist Jeans",
-        type: "Jeans",
-        price: 145,
-        oldPrice: 195,
-        rating: 4.6,
-        reviewCount: 312,
-        images: [
-            { src: product4, alt: "High Waist Jeans - Front" },
-            { src: product2, alt: "High Waist Jeans - Back" },
-            { src: product3, alt: "High Waist Jeans - Side" },
-            { src: product1, alt: "High Waist Jeans - Detail" },
-        ],
-        colors: [
-            { name: "Dark Indigo", value: "#191970", imageIndex: 0 },
-            { name: "Black", value: "#000000", imageIndex: 1 },
-        ],
-        sizes: ["XS", "S", "M", "L", "XL"],
-        stock: 20,
-        category: "women",
-        description: "Our best-selling high waist jeans with the perfect amount of stretch. Designed to flatter your figure with a slim-straight leg and ankle-length cut.",
-        features: ["Premium stretch denim", "High-rise waist", "Slim-straight leg", "Ankle length"],
-        reviewBreakdown: [
-            { stars: 5, percentage: 62 },
-            { stars: 4, percentage: 24 },
-            { stars: 3, percentage: 8 },
-            { stars: 2, percentage: 4 },
-            { stars: 1, percentage: 2 },
-        ],
-        shippingInfo: "Free standard shipping on orders over $150. Standard delivery takes 3-5 business days.",
-        returnsInfo: "30-day return policy for unworn items in original condition with tags attached.",
-    },
-
-];
+const DEFAULT_SHIPPING_INFO = "Free standard shipping on all orders over $100. Standard delivery takes 3-5 business days. Express shipping available at checkout for 1-2 business day delivery.";
+const DEFAULT_RETURNS_INFO = "We accept returns within 30 days of delivery. Items must be unworn, unwashed, and with original tags attached. Free return shipping on all domestic orders.";
 
 const useProductDetail = (productId: string | undefined) => {
+    const [product, setProduct] = useState<ProductDetail | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [selectedColor, setSelectedColor] = useState("");
     const [selectedSize, setSelectedSize] = useState("");
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState(0);
 
-    const product = mockProducts.find((p) => p.id === Number(productId)) || null;
-
     useEffect(() => {
-        if (product) {
-            setSelectedColor(product.colors[0]?.name || "");
-            setSelectedImageIndex(product.colors[0]?.imageIndex || 0);
-        }
-    }, [product?.id]);
-    
-    let savings = 0;
-    if (product && product.oldPrice) {
-        savings = product.oldPrice - product.price;
-    }
+        if (!productId) return;
+
+        const fetchProduct = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await apiClient.get<ProductFromServer>(`/products/${productId}`);
+                const p = response.data;
+
+                const detail: ProductDetail = {
+                    id: p._id,
+                    name: p.name,
+                    type: p.type,
+                    price: p.salePrice || p.price,
+                    oldPrice: p.salePrice ? p.price : undefined,
+                    rating: 0,
+                    reviewCount: 0,
+                    images: p.images.map((img) => ({
+                        src: `${apiClient.defaults.baseURL}${img}`,
+                        alt: p.name,
+                    })),
+                    colors: p.colors.map((color) => ({
+                        name: color,
+                        value: getColorValue(color),
+                        imageIndex: 0,
+                    })),
+                    sizes: p.sizes,
+                    stock: p.stock,
+                    category: p.category,
+                    description: p.description,
+                    features: p.features,
+                    reviewBreakdown: [],
+                    shippingInfo: DEFAULT_SHIPPING_INFO,
+                    returnsInfo: DEFAULT_RETURNS_INFO,
+                };
+
+                setProduct(detail);
+
+                if (p.colors.length > 0) {
+                    setSelectedColor(p.colors[0]);
+                }
+                if (p.sizes.length > 0) {
+                    setSelectedSize(p.sizes[0]);
+                }
+            } catch (err) {
+                console.error("Error fetching product:", err);
+                setError("Failed to load product");
+            }
+
+            setLoading(false);
+        };
+
+        fetchProduct();
+    }, [productId]);
 
     const incrementQuantity = () => {
-        setQuantity((prev) => Math.min(prev + 1, product?.stock || 1));
+        if (product && quantity < product.stock) {
+            setQuantity(quantity + 1);
+        }
     };
 
     const decrementQuantity = () => {
-        setQuantity((prev) => Math.max(prev - 1, 1));
-    }
+        if (quantity > 1) {
+            setQuantity(quantity - 1);
+        }
+    };
+
+    const savings = product && product.oldPrice
+        ? product.oldPrice - product.price
+        : 0;
 
     return {
         product,
+        loading,
+        error,
         selectedImageIndex,
         setSelectedImageIndex,
         selectedColor,
@@ -339,6 +182,6 @@ const useProductDetail = (productId: string | undefined) => {
         setActiveTab,
         savings,
     };
-}
+};
 
 export default useProductDetail;

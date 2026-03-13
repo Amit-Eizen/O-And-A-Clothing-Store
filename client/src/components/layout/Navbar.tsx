@@ -22,7 +22,7 @@ const Navbar = () => {
                 <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
                     <Typography variant="h5" sx={{ fontFamily: "'Playfair Display', serif" }}>
                         <span style={{ fontWeight: "bold" }}>O&A</span>{""}
-                        <span style={{ color: "#c8a951" }}>Clothes</span>
+                        <span style={{ color: "#c8a951" }}> Clothes</span>
                     </Typography>
                 </Link>
 

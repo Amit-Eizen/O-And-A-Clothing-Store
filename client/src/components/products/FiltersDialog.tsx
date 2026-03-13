@@ -52,7 +52,7 @@ const FiltersDialog = ({ open, onClose, filters, onUpdateFilters }: FiltersDialo
         <Dialog open={open} onClose={onClose} maxWidth={false} fullWidth={false} sx={{ "& .MuiDialog-paper": { width: 750, maxHeight: 645 } }}>
             {/* Header */}
             <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Typography variant="h6" sx={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}>
+                <Typography component="span" variant="h6" sx={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}>
                     Filters & Sort
                 </Typography>
                 <IconButton onClick={onClose}>
