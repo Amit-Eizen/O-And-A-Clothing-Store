@@ -98,6 +98,70 @@ router.get("/search", productsController.searchProducts.bind(productsController)
  */
 router.get("/type/:type", productsController.getProductsByType.bind(productsController));
 
+/**
+ * @swagger
+ * /products/filter:
+ *   get:
+ *     tags: [Products]
+ *     summary: Get filtered products with pagination
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [men, women, accessories]
+ *         description: Filter by category
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filter by type (comma-separated, e.g. Shirts,Jackets)
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price
+ *       - in: query
+ *         name: sizes
+ *         schema:
+ *           type: string
+ *         description: Filter by sizes (comma-separated, e.g. S,M,L)
+ *       - in: query
+ *         name: colors
+ *         schema:
+ *           type: string
+ *         description: Filter by colors (comma-separated, e.g. Black,Red)
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [newest, price-low, price-high]
+ *         description: Sort order
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *           default: 8
+ *         description: Products per page
+ *     responses:
+ *       200:
+ *         description: Filtered products with pagination info
+ *       500:
+ *         description: Server error
+ */
+router.get("/filter", productsController.getFilteredProducts.bind(productsController));
+
 
 /**
  * @swagger

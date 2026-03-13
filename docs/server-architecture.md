@@ -6,6 +6,7 @@
 server/src/
 ├── app.ts                      # Express app setup (MongoDB, Swagger, CORS, routes)
 ├── server.ts                   # Entry point
+├── seed.ts                     # Database seed script (54 sample products with images)
 ├── swagger.ts                  # Swagger/OpenAPI configuration
 │
 ├── models/
@@ -20,8 +21,8 @@ server/src/
 │   ├── baseService.ts          # Reusable CRUD service (getAll, getById, create, update, delete)
 │   ├── authService.ts          # Auth logic (register, login, logout, refreshToken, googleSignIn)
 │   ├── reviewsService.ts       # Reviews (getWithPaging, getByUserId, toggleLike)
-│   ├── productsService.ts      # Products (getProductsByCategory, searchProducts)
-│   ├── cartService.ts          # Cart (getCartByUserId, addItem, updateQuantity, removeItem, clearCart)
+│   ├── productsService.ts      # Products (getProductsByCategory, searchProducts, getFilteredProducts with pagination)
+│   ├── cartService.ts          # Cart (getCartByUserId, addItem, updateQuantity, removeItem, clearCart, mergeCart)
 │   ├── ordersService.ts        # Orders (createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
 │   ├── commentsService.ts      # Comments (getCommentsByReviewId)
 │   └── LLM/
@@ -32,7 +33,7 @@ server/src/
 │   ├── baseController.ts       # Reusable CRUD controller with HTTP status codes
 │   ├── authController.ts       # Auth endpoints handler
 │   ├── reviewsController.ts    # Reviews (create with userId from token, paging, like)
-│   ├── productsControllers.ts  # Products (getByCategory, search)
+│   ├── productsControllers.ts  # Products (getByCategory, search, getFilteredProducts)
 │   ├── searchController.ts     # Smart search endpoint (LLM-powered)
 │   ├── cartController.ts       # Cart endpoints
 │   ├── ordersController.ts     # Orders endpoints
@@ -69,14 +70,14 @@ server/src/
 ```
 BaseService (getAll, getById, create, update, delete)
     ├── ReviewsService extends BaseService (adds getWithPaging, getByUserId, toggleLike)
-    ├── ProductsService extends BaseService (adds getProductsByCategory, searchProducts)
+    ├── ProductsService extends BaseService (adds getProductsByCategory, searchProducts, getFilteredProducts)
     ├── CartService extends BaseService (adds getCartByUserId, addItemToCart, updateItemQuantity, removeItemFromCart, clearCart)
     ├── OrdersService extends BaseService (adds createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
     └── CommentsService extends BaseService (adds getCommentsByReviewId)
 
 BaseController (getAll, getById, create, update, delete - with HTTP status codes)
     ├── ReviewsController extends BaseController (overrides create for userId from token, adds paging, like)
-    ├── ProductsController extends BaseController (adds getProductsByCategory, searchProducts)
+    ├── ProductsController extends BaseController (adds getProductsByCategory, searchProducts, getFilteredProducts)
     └── CommentsController extends BaseController (overrides create for userId from token, adds getByReview)
 ```
 
@@ -143,17 +144,17 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 | Field | Type | Notes |
 |-------|------|-------|
 | name | string | Required |
-| brand | string | Required |
+| type | string | Required (e.g., Jeans, Dresses, Sunglasses) |
 | description | string | Required (for AI search) |
 | price | number | Required |
 | salePrice | number | Optional discount price |
-| category | string | Required (e.g., shirts, pants, shoes) |
-| gender | string | Required, enum: "men", "women", "unisex" |
+| category | string | Required, enum: "men", "women", "accessories" |
 | sizes | string[] | Available sizes |
 | colors | string[] | Available colors |
-| images | string[] | Product image paths |
+| images | string[] | Product image paths (served from /public/images/products/) |
 | stock | number | Required, default: 0 |
 | tags | string[] | For search (e.g., cotton, casual, summer) |
+| features | string[] | Product features (e.g., "100% cotton", "Slim fit") |
 | createdAt/updatedAt | Date | Auto (timestamps) |
 
 ### Review
@@ -226,6 +227,27 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 
 **Price Logic**: The `price` stored in cart/order items is the final price the customer pays. If a product has a `salePrice`, the client sends `salePrice` as the `price`. If not, it sends the regular `price`.
 
+### Guest Cart Merge Flow
+
+When a guest user logs in, their localStorage cart is merged with their server cart:
+
+```
+[Guest browses] --adds items--> [localStorage cart]
+    |
+    v
+[User logs in] --POST /cart/merge--> [Cart Service: mergeCart(userId, guestItems)]
+    |
+    | For each guest item:
+    |   - If same productId+size+color exists → add quantities
+    |   - If not → add as new item
+    |
+    v
+[Merged cart in DB] --GET /cart--> [Client fetches merged cart]
+    |
+    v
+[Clear localStorage cart]
+```
+
 ---
 
 ## LLM Smart Search
@@ -259,13 +281,13 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 The LLM extracts these optional fields from natural language:
 | Filter | MongoDB Field | Example Query |
 |--------|--------------|---------------|
-| category | category | "show me pants" → `{category: "pants"}` |
-| gender | gender | "women's shoes" → `{gender: "women"}` |
+| category | category | "women's shoes" → `{category: "women"}` |
+| type | type (regex) | "show me jeans" → `{type: {$regex: "jeans", $options: "i"}}` |
 | color | colors (regex) | "blue jacket" → `{colors: {$regex: "blue", $options: "i"}}` |
 | size | sizes | "XL shirts" → `{sizes: "XL"}` |
 | minPrice/maxPrice | price ($gte/$lte) | "under 200" → `{price: {$lte: 200}}` |
 | tags | tags ($in, regex) | "casual cotton" → `{tags: {$in: [/casual/i, /cotton/i]}}` |
-| query | name/description/brand ($or, regex) | "Nike" → `{$or: [{name: /Nike/i}, ...]}` |
+| query | name/description ($or, regex) | "bomber" → `{$or: [{name: /bomber/i}, ...]}` |
 
 ### Fallback
 
@@ -277,6 +299,25 @@ If the LLM response fails to parse as JSON, the service falls back to regular re
 - **Model**: `gemini-2.5-flash`
 - **API Key**: Configured via `GEMINI_API_KEY` env variable
 - **Get API Key**: https://aistudio.google.com/apikey
+
+---
+
+## Seed Data
+
+The `server/src/seed.ts` script populates the database with 54 products (18 per category):
+
+```bash
+cd server
+npx ts-node src/seed.ts
+```
+
+- **Accessories (18)**: Sunglasses, bags, shoes, jewelry, scarves, wallets, hats, boots
+- **Men (18)**: Jackets, polo shirts, jeans, t-shirts, hoodies, sweaters, pants
+- **Women (18)**: Dresses, sets, blouses, skirts, pants, jeans, coats
+
+Product images are stored in `server/public/images/products/{Accessories,Men,Women}/` and served via the `/public` static route.
+
+**Warning**: Running the seed script will **delete all existing products** before inserting the seed data.
 
 ---
 

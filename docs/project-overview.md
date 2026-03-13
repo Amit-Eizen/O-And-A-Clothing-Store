@@ -2,7 +2,7 @@
 
 ## About
 
-E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, product reviews with comments, shopping cart, and order management.
+E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, product reviews with comments, shopping cart (guest + logged-in with merge on login), and order management.
 
 ## Project Structure
 
@@ -18,8 +18,9 @@ O-And-A-Clothing-Store/
 │   │   │   ├── products/       # ProductCard, FiltersDialog
 │   │   │   ├── product-detail/ # ImageGallery (thumbnails + click-to-enlarge)
 │   │   │   └── cart/           # CartItem, OrderSummary, CheckoutDialog, FormField
-│   │   ├── services/           # API client + auth service
-│   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm, useAISearch)
+│   │   ├── context/            # React contexts (CartManager)
+│   │   ├── services/           # API client + auth service + cart services
+│   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm, useAISearch, useCategoryFilters, useCategoryProducts)
 │   │   ├── assets/             # Images
 │   │   ├── theme.ts            # MUI theme configuration
 │   │   ├── main.tsx            # Entry point
@@ -37,6 +38,7 @@ O-And-A-Clothing-Store/
 │   │   ├── tests/              # Jest tests for all features
 │   │   ├── app.ts              # Express app setup
 │   │   ├── server.ts           # Entry point
+│   │   ├── seed.ts             # Database seed script (54 products)
 │   │   └── swagger.ts          # OpenAPI config
 │   ├── .env.dev / .env.test / .env.prod
 │   └── package.json
@@ -78,8 +80,9 @@ O-And-A-Clothing-Store/
 ```bash
 cd server
 npm install
-npm run dev     # Development with nodemon
-npm run test    # Run tests
+npx ts-node src/seed.ts   # Populate DB with 54 sample products (run once)
+npm run dev                # Development with nodemon
+npm run test               # Run tests
 ```
 
 ### Client

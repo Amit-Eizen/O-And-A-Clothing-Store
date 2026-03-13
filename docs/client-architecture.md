@@ -78,14 +78,22 @@ client/src/
 │   ├── ReviewsPage.tsx         # Product reviews with comments
 │   └── AISearchPage.tsx        # AI-powered smart search page
 │
+├── context/
+│   └── CartManager.tsx          # Cart context (guest localStorage + logged-in API, merge on login)
+│
 ├── services/
 │   ├── api-client.ts           # Axios instance (base URL: localhost:3000)
-│   └── auth-service.ts         # API calls: loginUser, registerUser, googleSignIn
+│   ├── auth-service.ts         # API calls: loginUser, registerUser, googleSignIn
+│   ├── products-api.ts         # Products API (fetchFilteredProducts, getProductTags)
+│   ├── cart-localStorage.ts    # Guest cart CRUD (localStorage)
+│   └── cart-apiDB.ts           # Logged-in cart CRUD (server API)
 │
 └── hooks/
-    ├── useCart.ts               # Cart state, item CRUD, price calculations
+    ├── useCart.ts               # Cart context bridge (useContext wrapper for CartManager)
     ├── useCheckoutForm.ts      # Checkout form state, validation, input formatting
-    └── useAISearch.ts          # AI search state, API call to smart-search endpoint
+    ├── useAISearch.ts          # AI search state, API call to smart-search endpoint
+    ├── useCategoryFilters.ts   # Per-category filter state (sort, price, sizes, colors, types)
+    └── useCategoryProducts.ts  # Product loading + IntersectionObserver infinite scroll
 ```
 
 ---
@@ -125,7 +133,8 @@ client/src/
 main.tsx
   └── GoogleOAuthProvider
       └── ThemeProvider (MUI theme with Inter font)
-          └── App
+          └── CartProvider (guest/logged-in cart state)
+              └── App
               ├── Navbar (sticky, logo + nav links + icons)
               ├── ScrollToTop
               ├── Routes
@@ -142,11 +151,13 @@ main.tsx
               │   │   └── RegisterForm → AuthForm wrapper
               │   │
               │   ├── CategoryPage
-              │   │   ├── Breadcrumb (Home / Category)
+              │   │   ├── Breadcrumb (Home / Category + "Showing X of Y")
               │   │   ├── Title + Subtitle
               │   │   ├── Filters & Sort button → FiltersDialog
-              │   │   ├── Product Grid (uses ProductCard)
-              │   │   └── Load More button
+              │   │   ├── Product Grid (uses ProductCard, data from API)
+              │   │   ├── No products message (when empty)
+              │   │   ├── Sentinel div (IntersectionObserver for infinite scroll)
+              │   │   └── Loading spinner (CircularProgress)
               │   │
               │   ├── CartPage (uses useCart hook)
               │   │   ├── Breadcrumb (Home / Shopping Cart)
@@ -197,11 +208,18 @@ main.tsx
 - Max width 1280px, centered
 
 ### ProductCard (Reusable)
-- Used in both NewArrivals and CategoryPage
+- Used in NewArrivals, CategoryPage, and SearchResults
 - Shows: image (400px height, hover zoom), tags (NEW/SALE chips), type, name, price
 - Sale price shows old price with strikethrough
 - Links to `/{category}/{id}`
 - Tag colors: SALE = gold (#c8a951), others = black
+- `id` is `string` (MongoDB `_id`), mapped from `ProductFromServer` in parent components
+
+### products-api.ts (Frontend Service)
+- `ProductFromServer` interface — matches the MongoDB Product model
+- `FilterParams` interface — category, type[], sizes[], colors[], minPrice, maxPrice, sort, page, limit
+- `fetchFilteredProducts(params)` — converts FilterParams to URL query string and calls `GET /products/filter`
+- Uses `paramRules` array with type-based conversion (string stays, array → `join(",")`, number → `String()`)
 
 ### FiltersDialog
 - MUI Dialog (750px wide, 645px max height)
@@ -214,9 +232,11 @@ main.tsx
 ### CategoryPage
 - Reads category from URL via `useParams`
 - Dynamic title/subtitle per category (categoryConfig object)
-- Per-category filter state using `Record<string, FilterState>` pattern
-- Filter state persists when switching between categories (within same session)
-- Mock product data (will be replaced with API calls)
+- All logic extracted into two custom hooks: `useCategoryFilters` + `useCategoryProducts`
+- Page component is pure JSX — only `useState` for `filtersOpen` dialog
+- Shows "No products available at the moment" when API returns 0 products
+- "Showing X of Y" in breadcrumb shows loaded count vs total
+- Sentinel div (`<div ref={sentinelRef}>`) at bottom of grid for IntersectionObserver
 
 ### ScrollToTop
 - Listens to `useLocation` pathname changes
@@ -283,10 +303,45 @@ main.tsx
 - `clearResults()` — resets all state to initial (brings back suggestions + How It Works)
 - `setQuery` — updates input text
 
-**`useCart`** - Cart state management:
-- `cartItems` state with `updateQuantity` and `removeItem` functions
-- Computed: `subtotal`, `shipping`, `tax`, `total`
-- `checkoutOpen` state for checkout dialog
+**`useCategoryFilters(category)`** - Per-category filter state:
+- Manages `filtersState: Record<string, CategoryFilters>` — each category has its own filters
+- `defaultFilters` wrapped in `useMemo` to prevent infinite re-render (see troubleshooting #20)
+- Returns `{ currentFilters, updateFilters }`
+- Filter state persists when switching between categories (within same session)
+- Exports `CategoryFilters` interface used by other hooks
+
+**`useCategoryProducts(category, filters)`** - Product loading + infinite scroll:
+- Fetches products from server via `fetchFilteredProducts` from `products-api.ts`
+- `buildFilterParams` wrapped in `useCallback` — both useEffects depend on it
+- **First useEffect**: Resets and loads page 1 when category/filters change. Uses `isEffectActive` flag for StrictMode protection. 500ms loading delay for smooth UX
+- **Second useEffect**: Sets up `IntersectionObserver` on `sentinelRef`. When sentinel enters viewport, loads next page
+- `hasMore` ref tracks if more pages exist (`products.length >= PRODUCTS_PER_PAGE`)
+- `isLoadingNextPage` ref prevents concurrent loads and blocks observer during initial load delay
+- Duplicate protection: `existingIds` Set filters out any products already in state
+- 300ms delay before each infinite scroll fetch (so user sees spinner)
+- Returns `{ products, totalProducts, loading, sentinelRef }`
+- `PRODUCTS_PER_PAGE = 8` constant at top of file
+
+**`useCart`** - Cart context bridge:
+- Wraps `useContext(CartContext)` from `CartManager.tsx`
+- Exposes: `cartItems`, `addItem`, `updateItemQuantity`, `removeItem`, `clearCart`, `syncAfterLogin`
+- Computed values: `itemCount`, `subtotal`, `shipping` (free over $150), `tax` (8%), `total`
+
+### Cart Architecture (Guest + Logged-in)
+
+The cart system splits into 3 layers:
+
+```
+CartManager.tsx (Context — decides guest vs logged-in)
+    ├── cart-localStorage.ts (guest: saves/loads from localStorage)
+    └── cart-apiDB.ts (logged-in: API calls to server)
+```
+
+**Guest flow**: User adds items → saved to localStorage → persists across page refreshes
+**Logged-in flow**: User adds items → API call to server → saved in MongoDB
+**Merge on login**: `syncAfterLogin()` sends guest cart to `POST /cart/merge` → clears localStorage → fetches merged cart from server
+
+Cart items are identified by `productId + size + color` combination (not just productId), so the same product in different sizes/colors is treated as separate items.
 
 **`useCheckoutForm`** - Checkout form logic:
 - `form` state (10 fields) + `errors` state
