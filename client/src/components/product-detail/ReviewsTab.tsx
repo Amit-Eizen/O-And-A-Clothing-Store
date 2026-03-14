@@ -1,6 +1,8 @@
 import { Box, Typography, Rating, Button, LinearProgress } from "@mui/material";
 import { Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 interface ReviewsTabProps {
     rating: number;
@@ -10,6 +12,37 @@ interface ReviewsTabProps {
 }
 
 const ReviewsTab = ({ rating, reviewCount, reviewBreakdown, reviewsLink }: ReviewsTabProps) => {
+    if (reviewCount === 0) {
+        return (
+            <Box sx={{ py: 6, textAlign: "center" }}>
+                <StarBorderIcon sx={{ fontSize: 48, color: "#ccc", mb: 2 }} />
+                <Typography sx={{ fontSize: 20, fontWeight: 600, mb: 1 }}>
+                    No Reviews Yet
+                </Typography>
+                <Typography sx={{ fontSize: 14, color: "#999", mb: 3, maxWidth: 400, mx: "auto" }}>
+                    This product hasn't received any reviews yet. Be the first to share your experience and help other customers make informed decisions.
+                </Typography>
+                {/* <Button
+                    component={Link}
+                    to={reviewsLink}
+                    variant="contained"
+                    startIcon={<ChatBubbleOutlineIcon />}
+                    sx={{
+                        backgroundColor: "#c8a951",
+                        fontSize: 13,
+                        letterSpacing: 1,
+                        textDecoration: "none",
+                        "&:hover": {
+                            backgroundColor: "#b8993e",
+                        },
+                    }}
+                >
+                    WRITE FIRST REVIEW
+                </Button> */}
+            </Box>
+        );
+    }
+
     return (
         <Box sx={{ py: 3 }}>
             {/* Overall Rating */}

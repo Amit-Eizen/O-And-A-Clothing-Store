@@ -3,8 +3,10 @@ import { Box, Typography, Avatar, Rating, Dialog } from "@mui/material";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CommentsDialog from "./CommentsDialog";
+import { toggleReviewLike } from "../../services/reviews-api";
 
 interface ReviewCardProps {
+    reviewId: string,
     reviewerName: string;
     reviewerAvatar: string;
     date: string;
@@ -14,22 +16,31 @@ interface ReviewCardProps {
     images: string[];
     helpfulCount: number;
     commentCount: number;
-    comments: { name: string; avatarLetters: string; time: string; text: string }[];
+    likedByUser: string[];
+    onReviewChanged?: () => void;
 }
 
-const ReviewCard = ({ reviewerName, reviewerAvatar, date, rating, title, text, images, helpfulCount, commentCount, comments }: ReviewCardProps) => {
-    const [liked, setLiked] = useState(false);
+const ReviewCard = ({ reviewId, reviewerName, reviewerAvatar, date, rating, title, text, images, helpfulCount, commentCount, likedByUser, onReviewChanged }: ReviewCardProps) => {
+    const userId = localStorage.getItem("userId");
+    const [liked, setLiked] = useState(userId ? likedByUser.includes(userId) : false);
     const [currentHelpfulCount, setCurrentHelpfulCount] = useState(helpfulCount);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [commentsOpen, setCommentsOpen] = useState(false);
 
-    const handleLike = () => {
+    const handleLike = async () => {
         if (liked) {
             setLiked(false);
             setCurrentHelpfulCount(currentHelpfulCount - 1);
         } else {
             setLiked(true);
             setCurrentHelpfulCount(currentHelpfulCount + 1);
+        }
+
+        try {
+            await toggleReviewLike(reviewId);
+        } catch (error) {
+            setLiked(!liked);
+            setCurrentHelpfulCount(helpfulCount);
         }
     };
 
@@ -117,11 +128,12 @@ const ReviewCard = ({ reviewerName, reviewerAvatar, date, rating, title, text, i
             <CommentsDialog
                 open={commentsOpen}
                 onClose={() => setCommentsOpen(false)}
+                reviewId={reviewId}
                 reviewerName={reviewerName}
                 reviewerAvatarLetters={reviewerAvatar}
                 reviewRating={rating}
                 reviewText={text}
-                comments={comments}
+                onCommentAdded={onReviewChanged}
             />
         </Box>
     );

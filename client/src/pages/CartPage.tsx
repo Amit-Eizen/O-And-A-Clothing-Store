@@ -3,14 +3,16 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CartItem from "../components/cart/CartItem";
 import OrderSummary from "../components/cart/OrderSummary";
 import CheckoutDialog from "../components/cart/CheckoutDialog";
+import OrderSuccessDialog from "../components/cart/OrderSuccessDialog";
 import useCart from "../hooks/useCart";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const CartPage = () => {
-    const { cartItems, updateItemQuantity, removeItem, 
+    const { cartItems, updateItemQuantity, removeItem, clearCart,
         subtotal, shipping, tax, total } = useCart();
     const [checkoutOpen, setCheckoutOpen] = useState(false);
+    const [successOrderNumber, setSuccessOrderNumber] = useState("");
     const navigate = useNavigate();
 
     return (
@@ -62,10 +64,19 @@ const CartPage = () => {
             <CheckoutDialog 
                 open={checkoutOpen} 
                 onClose={() => setCheckoutOpen(false)} 
+                onSuccess={(orderNumber: string) => {
+                    clearCart();
+                    setSuccessOrderNumber(orderNumber);
+                }}
                 subtotal={subtotal} 
                 shipping={shipping} 
                 tax={tax} 
                 total={total} />
+
+            <OrderSuccessDialog
+                open={successOrderNumber !== ""}
+                orderNumber={successOrderNumber}
+            />
         </Box>
     );
 };

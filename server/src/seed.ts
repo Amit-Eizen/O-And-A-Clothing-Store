@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import bcrypt from "bcrypt";
 import Product from "./models/productsModel";
+import User from "./models/userModel";
+import Review from "./models/reviewsModel";
+import Comment from "./models/commentsModel";
 
 dotenv.config({ path: ".env.dev" });
 
@@ -1110,6 +1114,105 @@ const products = [
   },
 ];
 
+// ==================== SEED USERS ====================
+
+const seedUsers = [
+  { username: "Sarah Miller", email: "sarah@example.com", password: "Password123!", profileImage: "" },
+  { username: "James Wilson", email: "james@example.com", password: "Password123!", profileImage: "" },
+  { username: "Emily Chen", email: "emily@example.com", password: "Password123!", profileImage: "" },
+  { username: "David Brown", email: "david@example.com", password: "Password123!", profileImage: "" },
+  { username: "Rachel Kim", email: "rachel@example.com", password: "Password123!", profileImage: "" },
+];
+
+// ==================== REVIEW TEMPLATES ====================
+
+const reviewTitles = [
+  "Absolutely love it!",
+  "Great quality for the price",
+  "Exceeded my expectations",
+  "Perfect fit and style",
+  "Beautiful piece",
+  "Good but not perfect",
+  "Decent quality",
+  "Nice addition to my wardrobe",
+  "Stunning!",
+  "Worth every penny",
+  "Not what I expected",
+  "Solid purchase",
+  "Would buy again",
+  "Lovely design",
+  "Very comfortable",
+];
+
+const reviewContents = [
+  "I've been wearing this non-stop since I got it. The quality is amazing and it fits perfectly. Highly recommend!",
+  "The material feels premium and the stitching is very well done. I'm impressed with the attention to detail.",
+  "Ordered this for a special event and got so many compliments. The color is exactly as shown in the pictures.",
+  "Very comfortable to wear all day. The fabric is soft and breathable. Will definitely be ordering more.",
+  "Good quality overall but the sizing runs a bit large. I'd recommend going one size down.",
+  "Beautiful design and great craftsmanship. It arrived well-packaged and in perfect condition.",
+  "I was hesitant at first but I'm so glad I purchased this. It looks even better in person than in the photos.",
+  "The fit is true to size and the material is high quality. A great addition to my collection.",
+  "Nice piece but the color is slightly different from what's shown online. Still happy with the purchase overall.",
+  "This has quickly become one of my favorite items. The style is versatile and goes with everything.",
+  "Excellent value for money. Comparable to items I've seen at twice the price in high-end stores.",
+  "The design is unique and I always get asked where I got it. Very happy with this purchase!",
+];
+
+// ==================== COMMENT TEMPLATES ====================
+
+const commentContents = [
+  "I agree! This is one of the best purchases I've made.",
+  "Thanks for the review! Just ordered one myself.",
+  "How does it hold up after washing? Any shrinkage?",
+  "I have the same one in a different color and love it too!",
+  "Great review, very helpful. I was on the fence but this convinced me.",
+  "Does it run true to size? I'm between sizes.",
+  "I've had mine for 3 months now and it still looks brand new.",
+  "The quality really is impressive for this price point.",
+  "Would you recommend this for everyday wear?",
+  "Just got mine delivered and I'm so excited to try it on!",
+  "Totally agree with your review. Five stars from me too!",
+  "Can you share what size you ordered and your measurements?",
+];
+
+// ==================== HELPERS ====================
+
+function randomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function weightedRating(): number {
+  const weights = [
+    { rating: 5, chance: 0.35 },
+    { rating: 4, chance: 0.35 },
+    { rating: 3, chance: 0.15 },
+    { rating: 2, chance: 0.10 },
+    { rating: 1, chance: 0.05 },
+  ];
+  const rand = Math.random();
+  let sum = 0;
+  for (const w of weights) {
+    sum += w.chance;
+    if (rand <= sum) {
+      return w.rating;
+    }
+  }
+  return 4;
+}
+
+function randomDate(daysBack: number): Date {
+  const now = new Date();
+  const past = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+  return new Date(past.getTime() + Math.random() * (now.getTime() - past.getTime()));
+}
+
+// ==================== SEED FUNCTION ====================
+
 async function seed() {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
@@ -1121,30 +1224,108 @@ async function seed() {
     await mongoose.connect(dbUrl);
     console.log("Connected to Database");
 
-    // Clear existing products
-    const deleted = await Product.deleteMany({});
-    console.log(`Deleted ${deleted.deletedCount} existing products`);
+    // Clear all collections
+    await Product.deleteMany({});
+    await User.deleteMany({});
+    await Review.deleteMany({});
+    await Comment.deleteMany({});
+    console.log("Cleared all collections");
 
-    // Add random soldCount to each product
+    // Insert products
     const productsWithSales = products.map((p) => ({
       ...p,
       soldCount: Math.floor(Math.random() * 200),
     }));
+    const insertedProducts = await Product.insertMany(productsWithSales);
+    console.log(`Inserted ${insertedProducts.length} products`);
 
-    // Insert new products
-    const inserted = await Product.insertMany(productsWithSales);
-    console.log(`Inserted ${inserted.length} products`);
+    // Insert users with hashed passwords
+    const usersWithHash = await Promise.all(
+      seedUsers.map(async (u) => ({
+        ...u,
+        password: await bcrypt.hash(u.password, 10),
+      }))
+    );
+    const insertedUsers = await User.insertMany(usersWithHash);
+    console.log(`Inserted ${insertedUsers.length} users`);
 
+    // Create reviews on the first 20 products
+    const productsToReview = [
+        ...insertedProducts.filter((p) => p.category === "accessories").slice(0, 6),
+        ...insertedProducts.filter((p) => p.category === "men").slice(0, 6),
+        ...insertedProducts.filter((p) => p.category === "women").slice(0, 6),
+    ];
+    const allReviews: any[] = [];
+
+    for (const product of productsToReview) {
+      const reviewCount = randomInt(2, 5);
+
+      for (let i = 0; i < reviewCount; i++) {
+        const user = randomItem(insertedUsers);
+        const likes: mongoose.Types.ObjectId[] = [];
+
+        // Random likes from other users
+        for (const otherUser of insertedUsers) {
+          if (otherUser._id.toString() !== user._id.toString() && Math.random() < 0.3) {
+            likes.push(otherUser._id as mongoose.Types.ObjectId);
+          }
+        }
+
+        allReviews.push({
+          userId: user._id,
+          productId: product._id,
+          title: randomItem(reviewTitles),
+          content: randomItem(reviewContents),
+          rating: weightedRating(),
+          images: Math.random() < 0.4
+            ? [
+                product.images[0],
+                ...(Math.random() < 0.5 ? [randomItem(insertedProducts).images[0]] : [])
+              ]
+            : [],
+          likes,
+          createdAt: randomDate(180),
+        });
+      }
+    }
+
+    const insertedReviews = await Review.insertMany(allReviews);
+    console.log(`Inserted ${insertedReviews.length} reviews`);
+
+    // Create comments on ~30% of reviews
+    const allComments: any[] = [];
+
+    for (const review of insertedReviews) {
+      if (Math.random() < 0.3) {
+        const commentCount = randomInt(1, 3);
+
+        for (let i = 0; i < commentCount; i++) {
+          const user = randomItem(insertedUsers);
+          allComments.push({
+            userId: user._id,
+            reviewId: review._id,
+            content: randomItem(commentContents),
+            createdAt: randomDate(90),
+          });
+        }
+      }
+    }
+
+    const insertedComments = await Comment.insertMany(allComments);
+    console.log(`Inserted ${insertedComments.length} comments`);
+
+    // Summary
     console.log("\nBreakdown:");
-    const accessories = inserted.filter((p) => p.category === "accessories");
-    const men = inserted.filter((p) => p.category === "men");
-    const women = inserted.filter((p) => p.category === "women");
+    const accessories = insertedProducts.filter((p) => p.category === "accessories");
+    const men = insertedProducts.filter((p) => p.category === "men");
+    const women = insertedProducts.filter((p) => p.category === "women");
     console.log(`  Accessories: ${accessories.length}`);
     console.log(`  Men: ${men.length}`);
     console.log(`  Women: ${women.length}`);
-
-    const onSale = inserted.filter((p) => p.salePrice);
-    console.log(`  On Sale: ${onSale.length}`);
+    console.log(`  On Sale: ${insertedProducts.filter((p) => p.salePrice).length}`);
+    console.log(`  Users: ${insertedUsers.length}`);
+    console.log(`  Reviews: ${insertedReviews.length}`);
+    console.log(`  Comments: ${insertedComments.length}`);
 
     console.log("\nSeed completed successfully!");
   } catch (error) {

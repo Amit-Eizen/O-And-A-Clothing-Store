@@ -5,8 +5,8 @@ import cartService from "../services/cartService";
 
 const createOrder = async (req: AuthRequest, res: Response) => {
     try {
-        const { shipping, shippingAddress } = req.body;
-        const order = await ordersService.createOrder(req.userId!, shipping, shippingAddress);
+        const { shipping, tax, shippingAddress } = req.body;
+        const order = await ordersService.createOrder(req.userId!, shipping, tax, shippingAddress);
         res.status(201).json(order);
     } catch (error: any) {
         if (error === "Cart is empty") {

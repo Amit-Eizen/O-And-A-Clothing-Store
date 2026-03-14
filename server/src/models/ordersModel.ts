@@ -14,6 +14,7 @@ export interface IOrder extends Document {
     items: IOrderItem[];
     totalPrice: number;
     shipping: number;
+    tax: number;
     status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
     shippingAddress: {
         street: string;
@@ -73,6 +74,11 @@ const orderSchema = new Schema<IOrder>(
         shipping: { 
             type: Number, 
             default: 0 
+        },
+
+        tax: {
+            type: Number,
+            default: 0
         },
 
         status: { 

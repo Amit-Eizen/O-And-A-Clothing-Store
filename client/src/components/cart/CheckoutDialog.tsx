@@ -10,14 +10,15 @@ import FormField from "./FormField";
 interface CheckoutDialogProps {
     open: boolean;
     onClose: () => void;
+    onSuccess: (orderNumber: string) => void;
     subtotal: number;
     shipping: number;
     tax: number;
     total: number;
 }
 
-const CheckoutDialog = ({ open, onClose, subtotal, shipping, tax, total }: CheckoutDialogProps) => {
-    const { form, errors, handleChange, handleSubmit, handleClose } = useCheckoutForm();
+const CheckoutDialog = ({ open, onClose, onSuccess, subtotal, shipping, tax, total }: CheckoutDialogProps) => {
+    const { form, errors, handleChange, handleSubmit, handleClose } = useCheckoutForm(shipping, tax);
 
     return (
         <Dialog
@@ -191,7 +192,7 @@ const CheckoutDialog = ({ open, onClose, subtotal, shipping, tax, total }: Check
             <DialogActions sx={{ px: 3, py: 2, gap: 2 }}>
                 <Button
                     variant="outlined"
-                    onClick={() => handleSubmit(onClose)}
+                    onClick={() => handleSubmit(onClose, onSuccess)}
                     sx={{
                         flex: 2,
                         backgroundColor: "#c8a951",

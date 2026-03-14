@@ -20,7 +20,7 @@ server/src/
 ├── services/
 │   ├── baseService.ts          # Reusable CRUD service (getAll, getById, create, update, delete)
 │   ├── authService.ts          # Auth logic (register, login, logout, refreshToken, googleSignIn)
-│   ├── reviewsService.ts       # Reviews (getWithPaging, getByUserId, toggleLike)
+│   ├── reviewsService.ts       # Reviews (getWithPaging, getByUserId, getByProductId, toggleLike)
 │   ├── productsService.ts      # Products (getProductsByCategory, searchProducts, getFilteredProducts with pagination)
 │   ├── cartService.ts          # Cart (getCartByUserId, addItem, updateQuantity, removeItem, clearCart, mergeCart)
 │   ├── ordersService.ts        # Orders (createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
@@ -32,7 +32,7 @@ server/src/
 ├── controllers/
 │   ├── baseController.ts       # Reusable CRUD controller with HTTP status codes
 │   ├── authController.ts       # Auth endpoints handler
-│   ├── reviewsController.ts    # Reviews (create with userId from token, paging, like)
+│   ├── reviewsController.ts    # Reviews (create with userId from token, paging, like, getByProductId, ownership check on update/delete)
 │   ├── productsControllers.ts  # Products (getByCategory, search, getFilteredProducts)
 │   ├── searchController.ts     # Smart search endpoint (LLM-powered)
 │   ├── cartController.ts       # Cart endpoints
@@ -69,7 +69,7 @@ server/src/
 
 ```
 BaseService (getAll, getById, create, update, delete)
-    ├── ReviewsService extends BaseService (adds getWithPaging, getByUserId, toggleLike)
+    ├── ReviewsService extends BaseService (adds getWithPaging, getByUserId, getByProductId, toggleLike)
     ├── ProductsService extends BaseService (adds getProductsByCategory, searchProducts, getFilteredProducts)
     ├── CartService extends BaseService (adds getCartByUserId, addItemToCart, updateItemQuantity, removeItemFromCart, clearCart)
     ├── OrdersService extends BaseService (adds createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
@@ -161,6 +161,7 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 | Field | Type | Notes |
 |-------|------|-------|
 | userId | ObjectId (ref: user) | Who posted it |
+| productId | ObjectId (ref: products) | Which product is reviewed |
 | title | string | Review title |
 | content | string | Review text |
 | rating | number | 1-5 stars |
@@ -185,8 +186,9 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 | userId | ObjectId (ref: user) | Who placed the order |
 | orderNumber | string | Unique, format: ORD-YYYY-NNN |
 | items | Array | Ordered items (copied from cart) |
-| totalPrice | number | Sum of (price x quantity) + shipping |
+| totalPrice | number | Sum of (price x quantity) + shipping + tax |
 | shipping | number | Shipping cost, default: 0 |
+| tax | number | Tax amount, default: 0 |
 | status | string | Enum: pending, processing, shipped, delivered, cancelled |
 | shippingAddress | object | street, city, zipCode, country |
 
@@ -304,20 +306,24 @@ If the LLM response fails to parse as JSON, the service falls back to regular re
 
 ## Seed Data
 
-The `server/src/seed.ts` script populates the database with 54 products (18 per category):
+The `server/src/seed.ts` script populates the database with sample data:
 
 ```bash
 cd server
 npx ts-node src/seed.ts
 ```
 
-- **Accessories (18)**: Sunglasses, bags, shoes, jewelry, scarves, wallets, hats, boots
-- **Men (18)**: Jackets, polo shirts, jeans, t-shirts, hoodies, sweaters, pants
-- **Women (18)**: Dresses, sets, blouses, skirts, pants, jeans, coats
+- **54 Products** (18 per category):
+  - **Accessories (18)**: Sunglasses, bags, shoes, jewelry, scarves, wallets, hats, boots
+  - **Men (18)**: Jackets, polo shirts, jeans, t-shirts, hoodies, sweaters, pants
+  - **Women (18)**: Dresses, sets, blouses, skirts, pants, jeans, coats
+- **5 Dummy Users** (hashed passwords with bcrypt)
+- **Reviews** on ~15-20 products (2-5 reviews each, random ratings weighted 3-5)
+- **Comments** on ~30% of reviews (1-3 comments each)
 
 Product images are stored in `server/public/images/products/{Accessories,Men,Women}/` and served via the `/public` static route.
 
-**Warning**: Running the seed script will **delete all existing products** before inserting the seed data.
+**Warning**: Running the seed script will **delete all existing products, users, reviews, and comments** before inserting the seed data.
 
 ---
 

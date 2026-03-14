@@ -60,13 +60,27 @@ client/src/
 │   │   ├── ProductCard.tsx     # Reusable product card (image, tags, name, price)
 │   │   └── FiltersDialog.tsx   # Filters & Sort dialog (sort, type, price, size, color)
 │   │
-│   └── product-detail/
-│       └── ImageGallery.tsx    # Product images with thumbnail nav + click-to-enlarge
+│   ├── product-detail/
+│   │   ├── ImageGallery.tsx    # Product images with thumbnail nav + click-to-enlarge
+│   │   ├── ProductInfo.tsx     # Product name, price, size/color selectors, add to cart/wishlist
+│   │   ├── ProductTabs.tsx     # Description / Reviews tabs
+│   │   └── ReviewsTab.tsx      # Reviews summary inside product detail (or "No Reviews Yet")
+│   │
+│   ├── reviews/
+│   │   ├── ReviewCard.tsx      # Review card (rating, title, content, like button, comments)
+│   │   ├── CommentsDialog.tsx  # Comments dialog (fetch from API, post new comment)
+│   │   └── ProductSidebar.tsx  # Product info sidebar on reviews page (image, rating, breakdown)
+│   │
+│   ├── account/
+│   │   ├── OrdersSection.tsx       # Order history list with product images and totals
+│   │   ├── WishlistSection.tsx     # Wishlist grid with remove functionality
+│   │   └── AccountSettingsSection.tsx # Profile editing (username, email, phone, address, photo)
 │   │
 │   └── cart/
 │       ├── CartItem.tsx        # Cart item card (image, info, quantity controls, remove)
 │       ├── OrderSummary.tsx    # Order summary sidebar (promo code, totals, checkout button)
 │       ├── CheckoutDialog.tsx  # Checkout popup (payment, shipping, contact, order summary)
+│       ├── OrderSuccessDialog.tsx # Order success popup (order number, view orders / continue shopping)
 │       └── FormField.tsx       # Reusable labeled text field with error display
 │
 ├── pages/
@@ -74,8 +88,9 @@ client/src/
 │   ├── HomePage.tsx            # Homepage (Hero + Categories + NewArrivals + Testimonial)
 │   ├── CategoryPage.tsx        # Category page (breadcrumb, title, filters, product grid)
 │   ├── CartPage.tsx            # Shopping cart page (cart items + order summary + checkout)
-│   ├── ProductDetailPage.tsx   # Product detail (images, info, add to cart)
-│   ├── ReviewsPage.tsx         # Product reviews with comments
+│   ├── ProductDetailPage.tsx   # Product detail (images, info, add to cart, real reviews)
+│   ├── ReviewsPage.tsx         # Product reviews with comments (connected to DB)
+│   ├── MyAccountPage.tsx       # Account page (orders, wishlist, settings — tab navigation)
 │   └── AISearchPage.tsx        # AI-powered smart search page
 │
 ├── context/
@@ -85,12 +100,15 @@ client/src/
 │   ├── api-client.ts           # Axios instance (base URL: localhost:3000)
 │   ├── auth-service.ts         # API calls: loginUser, registerUser, googleSignIn
 │   ├── products-api.ts         # Products API (fetchFilteredProducts, getProductTags)
+│   ├── reviews-api.ts          # Reviews API (fetchProductReviews, toggleLike, comments)
 │   ├── cart-localStorage.ts    # Guest cart CRUD (localStorage)
 │   └── cart-apiDB.ts           # Logged-in cart CRUD (server API)
 │
 └── hooks/
     ├── useCart.ts               # Cart context bridge (useContext wrapper for CartManager)
-    ├── useCheckoutForm.ts      # Checkout form state, validation, input formatting
+    ├── useCheckoutForm.ts      # Checkout form state, validation, input formatting, profile pre-fill, order API
+    ├── useProductDetail.ts     # Product detail fetching from API
+    ├── useProductReviews.ts    # Product reviews from API (rating, breakdown, sorting, likes)
     ├── useAISearch.ts          # AI search state, API call to smart-search endpoint
     ├── useCategoryFilters.ts   # Per-category filter state (sort, price, sizes, colors, types)
     └── useCategoryProducts.ts  # Product loading + IntersectionObserver infinite scroll
@@ -112,6 +130,7 @@ client/src/
     <Route path="/:category/:id/reviews" element={<ReviewsPage />} />
     <Route path="/:category/:id" element={<ProductDetailPage />} />
     <Route path="/search" element={<AISearchPage />} />
+    <Route path="/account" element={<MyAccountPage />} />
     <Route path="/:category" element={<CategoryPage />} />
   </Routes>
   <Footer />
@@ -172,13 +191,20 @@ main.tsx
               │   │       ├── Order Summary (totals)
               │   │       └── Place Order / Cancel buttons
               │   │
-              │   ├── ProductDetailPage
+              │   ├── ProductDetailPage (uses useProductDetail + useProductReviews)
               │   │   ├── ImageGallery (thumbnails + main image + click-to-enlarge)
-              │   │   └── Product info (name, price, description, add to cart)
+              │   │   ├── ProductInfo (name, price, size/color, add to cart/wishlist)
+              │   │   └── ProductTabs (Description + ReviewsTab with real ratings)
               │   │
-              │   ├── ReviewsPage
-              │   │   ├── Review cards (rating, title, content, likes)
-              │   │   └── Comments dialog per review
+              │   ├── ReviewsPage (uses useProductReviews)
+              │   │   ├── ProductSidebar (image, rating, star breakdown)
+              │   │   ├── ReviewCard (rating, title, content, like toggle via API)
+              │   │   └── CommentsDialog (fetch + post comments via API)
+              │   │
+              │   ├── MyAccountPage (?section= query param navigation)
+              │   │   ├── OrdersSection (order history with product images)
+              │   │   ├── WishlistSection (wishlist grid, remove items)
+              │   │   └── AccountSettingsSection (profile edit + photo upload)
               │   │
               │   └── AISearchPage (uses useAISearch hook)
               │       ├── AIStyleSection
@@ -343,11 +369,23 @@ CartManager.tsx (Context — decides guest vs logged-in)
 
 Cart items are identified by `productId + size + color` combination (not just productId), so the same product in different sizes/colors is treated as separate items.
 
-**`useCheckoutForm`** - Checkout form logic:
+**`useProductDetail(productId)`** - Product detail fetching:
+- Fetches product from `GET /products/:id` via apiClient
+- Maps server fields to UI interface (images with base URL, tags via `getProductTags`)
+- Returns `{ product, loading }`
+
+**`useProductReviews(productId)`** - Product reviews from API:
+- Fetches from `GET /reviews/product/:productId` with pagination and sorting
+- Maps server data to UI shape (`content`→`text`, `likes.length`→`helpfulCount`)
+- Helpers: `getAvatarLetters(username)`, `formatDate(isoString)`
+- Returns `{ reviews, loading, sortBy, setSortBy, averageRating, total, reviewBreakdown, reloadReviews }`
+
+**`useCheckoutForm(shipping, tax)`** - Checkout form logic:
 - `form` state (10 fields) + `errors` state
+- Pre-fills shipping/contact fields from user profile on mount (`GET /users/profile`)
 - `handleChange(field)` - updates value + clears error + input formatting
 - `validate()` - checks all required fields, returns boolean
-- `handleSubmit(onClose)` - validates, resets form, closes dialog
+- `handleSubmit(onClose, onSuccess)` - validates, creates order via `POST /orders` (with shipping, tax, shippingAddress), resets form, closes dialog, calls onSuccess with orderNumber
 - `handleClose(onClose)` - resets form + errors, closes dialog
 
 ---

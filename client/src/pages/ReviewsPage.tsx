@@ -8,7 +8,7 @@ import ReviewCard from "../components/reviews/ReviewCard";
 const ReviewsPage = () => {
     const { category, id } = useParams<{ category: string; id: string }>();
     const { product } = useProductDetail(id);
-    const { reviews, sortBy, setSortBy } = useProductReviews(id);
+    const { reviews, sortBy, setSortBy, averageRating, total, reviewBreakdown, loading, reloadReviews } = useProductReviews(id);
 
     if (!product) {
         return null;
@@ -23,9 +23,9 @@ const ReviewsPage = () => {
                         image={product.images[0].src}
                         name={product.name}
                         type={product.type}
-                        rating={product.rating}
+                        rating={averageRating}
                         price={product.price}
-                        reviewBreakdown={product.reviewBreakdown}
+                        reviewBreakdown={reviewBreakdown}
                         backLink={`/${category}/${id}`}
                     />
                 </Box>
@@ -52,7 +52,7 @@ const ReviewsPage = () => {
 
                     {/* Review Count */}
                     <Typography sx={{ fontSize: 14, color: "#999", mb: 3 }}>
-                        {reviews.length} reviews
+                        {total} reviews
                     </Typography>
 
                     {/* Review Cards */}
@@ -60,6 +60,7 @@ const ReviewsPage = () => {
                         {reviews.map((review) => (
                             <ReviewCard 
                                 key={review.id}
+                                reviewId={review.id}
                                 reviewerName={review.name}
                                 reviewerAvatar={review.avatarLetters}
                                 date={review.date}
@@ -69,7 +70,8 @@ const ReviewsPage = () => {
                                 images={review.images}
                                 helpfulCount={review.helpfulCount}
                                 commentCount={review.commentCount}
-                                comments={review.comments}
+                                likedByUser={review.likedByUser}
+                                onReviewChanged={reloadReviews}
                             />
                         ))}
                     </Box>

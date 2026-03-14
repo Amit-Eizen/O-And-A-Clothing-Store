@@ -461,3 +461,32 @@ npm run dev                           # Start fresh
 ```
 
 **Lesson**: MUI's `variant` controls styling, `component` controls the HTML element. When nesting Typography inside DialogTitle/AccordionSummary (which render as headings), always use `component="span"` or `component="div"`.
+
+---
+
+## Branch 4: feature/connect-reviews-to-DB
+
+---
+
+## 27. React StrictMode — cart items duplicated via API
+
+**Problem**: Adding 1 item to cart resulted in quantity 2. The item appeared doubled in the server cart.
+
+**Cause**: In `CartManager.tsx`, the API call (`addItemToCart`) was inside the `setCartItems` updater function. React 18 StrictMode runs updater functions twice in development — so the API call fired twice, adding the item to the server cart twice.
+
+**Solution**: Moved all API calls (add, update, remove) **outside** the `setCartItems` updater. The updater now only contains pure state logic:
+```ts
+// WRONG — API call inside updater (fires twice in StrictMode)
+setCartItems((prev) => {
+    addItemToCart({ ... }); // Side effect!
+    return [...prev, newItem];
+});
+
+// RIGHT — API call outside updater
+setCartItems((prev) => [...prev, newItem]);
+if (isLoggedIn()) {
+    addItemToCart({ ... }); // Side effect outside
+}
+```
+
+**Lesson**: Never put side effects (API calls, localStorage writes) inside React state updater functions. Updater functions should be pure — only compute and return the new state. Side effects belong in the main function body, after the setState call.
