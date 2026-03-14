@@ -57,6 +57,42 @@ router.get("/paging", reviewsController.getwithPaging.bind(reviewsController));
 
 /**
  * @swagger
+ * /reviews/product/{productId}:
+ *   get:
+ *     tags: [Reviews]
+ *     summary: Get reviews by product ID with stats
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           default: newest
+ *     responses:
+ *       200:
+ *         description: Reviews with stats (averageRating, reviewBreakdown)
+ *       500:
+ *         description: Server error
+ */
+router.get("/product/:productId", reviewsController.getByProductId.bind(reviewsController));
+
+/**
+ * @swagger
  * /reviews/{id}:
  *   get:
  *     tags: [Reviews]
@@ -161,7 +197,7 @@ router.post("/", authenticate, uploadReviewImages, reviewsController.create.bind
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -177,6 +213,13 @@ router.post("/", authenticate, uploadReviewImages, reviewsController.create.bind
  *                 type: array
  *                 items:
  *                   type: string
+ *                 description: Existing image URLs to keep
+ *               newImages:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: New image files to upload
  *     responses:
  *       200:
  *         description: Review updated
@@ -187,7 +230,7 @@ router.post("/", authenticate, uploadReviewImages, reviewsController.create.bind
  *       500:
  *         description: Server error
  */
-router.put("/:id", authenticate, reviewsController.update.bind(reviewsController));
+router.put("/:id", authenticate, uploadReviewImages, reviewsController.update.bind(reviewsController));
 
 /**
  * @swagger

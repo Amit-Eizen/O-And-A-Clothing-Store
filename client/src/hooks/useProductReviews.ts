@@ -1,16 +1,10 @@
-import { useState } from "react";
-import product1 from "../assets/product-1.jpg";
-import product2 from "../assets/product-2.jpg";
-
-interface Comment {
-    name: string;
-    avatarLetters: string;
-    time: string;
-    text: string;
-}
+import apiClient from "../services/api-client";
+import { useState, useEffect, useCallback } from "react";
+import { fetchProductReviews } from "../services/reviews-api";
+import type { ReviewFromServer, ReviewBreakdownItem } from "../services/reviews-api";
 
 interface Review {
-    id: number;
+    id: string;
     name: string;
     avatarLetters: string;
     date: string;
@@ -20,167 +14,76 @@ interface Review {
     images: string[];
     helpfulCount: number;
     commentCount: number;
-    comments: Comment[];
+    likedByUser: string[];
 }
 
-interface ProductReviewsData {
-    [productId: number]: Review[];
-}
-
-const mockReviews: ProductReviewsData = {
-    1: [
-        {
-            id: 1,
-            name: "Sarah M.",
-            avatarLetters: "SM",
-            date: "Dec 15, 2024",
-            rating: 5,
-            title: "Absolutely Stunning!",
-            text: "This dress exceeded all my expectations. The silk is luxurious and the fit is perfect. I've received so many compliments every time I wear it. The color is even more vibrant in person!",
-            images: [product1, product2],
-            helpfulCount: 45,
-            commentCount: 2,
-            comments: [
-                { name: "Michelle A.", avatarLetters: "MA", time: "2 hours ago", text: "Totally agree! What size did you order?" },
-                { name: "James K.", avatarLetters: "JK", time: "5 hours ago", text: "Thanks for the detailed review! Ordering now." },
-            ],
-        },
-        {
-            id: 2,
-            name: "Michael T.",
-            avatarLetters: "MT",
-            date: "Dec 10, 2024",
-            rating: 4,
-            title: "Great quality, runs slightly large",
-            text: "Beautiful dress with excellent craftsmanship. I ordered my usual size but found it runs a bit large. Would recommend sizing down for a more fitted look. Overall very happy with the purchase!",
-            images: [],
-            helpfulCount: 28,
-            commentCount: 1,
-            comments: [
-                { name: "Laura B.", avatarLetters: "LB", time: "1 day ago", text: "Good to know about the sizing, thanks!" },
-            ],
-        },
-        {
-            id: 3,
-            name: "Emma L.",
-            avatarLetters: "EL",
-            date: "Nov 28, 2024",
-            rating: 5,
-            title: "Worth every penny",
-            text: "The color is even more beautiful in person! This has quickly become one of my favorite pieces in my wardrobe. The fabric quality is exceptional.",
-            images: [],
-            helpfulCount: 31,
-            commentCount: 0,
-            comments: [],
-        },
-        {
-            id: 4,
-            name: "Jessica R.",
-            avatarLetters: "JR",
-            date: "Nov 15, 2024",
-            rating: 5,
-            title: "Perfect for special occasions",
-            text: "Wore this to a wedding and got so many compliments. The drape is beautiful and it photographs incredibly well. Will definitely be ordering in another color.",
-            images: [product1],
-            helpfulCount: 22,
-            commentCount: 3,
-            comments: [
-                { name: "Nina S.", avatarLetters: "NS", time: "3 days ago", text: "Which color did you get?" },
-                { name: "Jessica R.", avatarLetters: "JR", time: "3 days ago", text: "I got the crimson red!" },
-                { name: "Tom H.", avatarLetters: "TH", time: "2 days ago", text: "Looks amazing in the photos!" },
-            ],
-        },
-        {
-            id: 5,
-            name: "David K.",
-            avatarLetters: "DK",
-            date: "Nov 5, 2024",
-            rating: 3,
-            title: "Nice but expected more",
-            text: "The quality is good but for the price I expected a bit more. The stitching could be better in some areas. The color is accurate though.",
-            images: [],
-            helpfulCount: 12,
-            commentCount: 1,
-            comments: [
-                { name: "Store Team", avatarLetters: "ST", time: "4 days ago", text: "We're sorry to hear that. Please contact our support team for assistance." },
-            ],
-        },
-    ],
+const getAvatarLetters = (username: string): string => {
+    const parts = username.trim().split(" ");
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return username.slice(0, 2).toUpperCase();
 };
 
-const defaultReviews: Review[] = [
-    {
-        id: 1,
-        name: "Alex P.",
-        avatarLetters: "AP",
-        date: "Dec 1, 2024",
-        rating: 5,
-        title: "Excellent product!",
-        text: "Really impressed with the quality. Fits perfectly and looks even better in person. Would highly recommend to anyone looking for premium clothing.",
-        images: [],
-        helpfulCount: 18,
-        commentCount: 0,
-        comments: [],
-    },
-    {
-        id: 2,
-        name: "Rachel S.",
-        avatarLetters: "RS",
-        date: "Nov 20, 2024",
-        rating: 4,
-        title: "Great addition to my wardrobe",
-        text: "Very happy with this purchase. The material feels premium and the fit is true to size. Only wish there were more color options available.",
-        images: [],
-        helpfulCount: 14,
-        commentCount: 2,
-        comments: [
-            { name: "Mark D.", avatarLetters: "MD", time: "1 week ago", text: "Agreed, more colors would be great!" },
-            { name: "Sophie L.", avatarLetters: "SL", time: "5 days ago", text: "I heard new colors are coming soon." },
-        ],
-    },
-    {
-        id: 3,
-        name: "James W.",
-        avatarLetters: "JW",
-        date: "Nov 10, 2024",
-        rating: 5,
-        title: "Best purchase this year",
-        text: "I've been looking for something like this for a while. The craftsmanship is outstanding and it arrived beautifully packaged. Will be a repeat customer.",
-        images: [product2],
-        helpfulCount: 25,
-        commentCount: 1,
-        comments: [
-            { name: "Emily R.", avatarLetters: "ER", time: "1 week ago", text: "The packaging really is next level!" },
-        ],
-    },
-];
+const formatDate = (isoString: string): string => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+};
+
+const mapReview = (review: ReviewFromServer): Review => {
+    return {
+        id: review._id,
+        name: review.userId.username,
+        avatarLetters: getAvatarLetters(review.userId.username),
+        date: formatDate(review.createdAt),
+        rating: review.rating,
+        title: review.title,
+        text: review.content,
+        images: review.images.map((img) => `${apiClient.defaults.baseURL}${img}`),
+        helpfulCount: review.likes.length,
+        commentCount: review.commentCount,
+        likedByUser: review.likes,
+    };
+};
 
 const useProductReviews = (productId: string | undefined) => {
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [loading, setLoading] = useState(true);
     const [sortBy, setSortBy] = useState("newest");
+    const [averageRating, setAverageRating] = useState(0);
+    const [total, setTotal] = useState(0);
+    const [reviewBreakdown, setReviewBreakdown] = useState<ReviewBreakdownItem[]>([]);
 
-    const id = Number(productId);
-    const reviews = mockReviews[id] || defaultReviews;
+    const loadReviews = useCallback(async () => {
+        if (!productId) return;
 
-    const sortedReviews = [...reviews].sort((a, b) => {
-        if (sortBy === "newest") {
-            return new Date(b.date).getTime() - new Date(a.date).getTime();
+        setLoading(true);
+        try {
+            const data = await fetchProductReviews(productId, 1, 10, sortBy);
+            setReviews(data.reviews.map(mapReview));
+            setTotal(data.total);
+            setAverageRating(data.averageRating);
+            setReviewBreakdown(data.reviewBreakdown);
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+        } finally {
+            setLoading(false);
         }
-        if (sortBy === "highest") {
-            return b.rating - a.rating;
-        }
-        if (sortBy === "lowest") {
-            return a.rating - b.rating;
-        }
-        if (sortBy === "helpful") {
-            return b.helpfulCount - a.helpfulCount;
-        }
-        return 0;
-    });
+    }, [productId, sortBy]);
 
-    return {
-        reviews: sortedReviews,
+    useEffect(() => {
+        loadReviews();
+    }, [loadReviews]);
+
+    return { 
+        reviews, 
+        loading, 
         sortBy,
         setSortBy,
+        averageRating,
+        total,
+        reviewBreakdown,
+        reloadReviews: loadReviews,
     };
 };
 

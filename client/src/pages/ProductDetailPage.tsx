@@ -2,6 +2,7 @@ import { Box, Typography, Breadcrumbs, Link as MuiLink } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import useProductDetail from "../hooks/useProductDetail";
+import useProductReviews from "../hooks/useProductReviews";
 import useCart from "../hooks/useCart";
 import ImageGallery from "../components/product-detail/ImageGallery";
 import ProductInfo from "../components/product-detail/ProductInfo";
@@ -9,6 +10,7 @@ import ProductTabs from "../components/product-detail/ProductTabs";
 
 const ProductDetailPage = () => {
     const { category, id } = useParams<{ category: string; id: string }>();
+    const { averageRating, total, reviewBreakdown } = useProductReviews(id);
     const {
         product,
         selectedImageIndex,
@@ -30,6 +32,13 @@ const ProductDetailPage = () => {
     if (!product) {
         return null;
     }
+
+    const productWithReviews = {
+        ...product,
+        rating: averageRating,
+        reviewCount: total,
+        reviewBreakdown,
+    };
 
     const handleAddToCart = () => {
         addItem({
@@ -100,7 +109,7 @@ const ProductDetailPage = () => {
                     {/* Right - Product Info */}
                     <Box sx={{ flex: 1 }}>
                         <ProductInfo
-                            product={product}
+                            product={productWithReviews}
                             selectedColor={selectedColor}
                             onColorChange={(color) => {
                                 setSelectedColor(color);
@@ -123,7 +132,7 @@ const ProductDetailPage = () => {
                 {/* Tabs */}
                 <Box sx={{ mt: 6 }}>
                     <ProductTabs
-                        product={product}
+                        product={productWithReviews}
                         activeTab={activeTab}
                         onTabChange={setActiveTab}
                         reviewsLink={`/${category}/${id}/reviews`}

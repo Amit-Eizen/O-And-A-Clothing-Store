@@ -2,7 +2,7 @@
 
 ## About
 
-E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, product reviews with comments, shopping cart (guest + logged-in with merge on login), and order management.
+E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, product reviews with comments (connected to DB with likes and real-time comment posting), shopping cart (guest + logged-in with merge on login), checkout with order creation, and user account management (profile, order history, wishlist).
 
 ## Project Structure
 
@@ -10,17 +10,19 @@ E-commerce clothing store with React frontend and Node.js backend. Features auth
 O-And-A-Clothing-Store/
 ├── client/                     # React frontend (Vite + TypeScript + MUI)
 │   ├── src/
-│   │   ├── pages/              # Page components (Auth, Home, Category, Cart, ProductDetail, Reviews, AISearch)
+│   │   ├── pages/              # Page components (Auth, Home, Category, Cart, ProductDetail, Reviews, AISearch, MyAccount)
 │   │   ├── components/
 │   │   │   ├── auth/           # Login/Register forms
 │   │   │   ├── home/           # Homepage sections (Hero, Categories, NewArrivals, Testimonial, AIStyleSection, SearchResults)
 │   │   │   ├── layout/         # Navbar, Footer, ScrollToTop
 │   │   │   ├── products/       # ProductCard, FiltersDialog
-│   │   │   ├── product-detail/ # ImageGallery (thumbnails + click-to-enlarge)
-│   │   │   └── cart/           # CartItem, OrderSummary, CheckoutDialog, FormField
+│   │   │   ├── product-detail/ # ImageGallery, ProductInfo, ProductTabs, ReviewsTab
+│   │   │   ├── reviews/        # ReviewCard, CommentsDialog, ProductSidebar
+│   │   │   ├── account/        # OrdersSection, WishlistSection, AccountSettingsSection
+│   │   │   └── cart/           # CartItem, OrderSummary, CheckoutDialog, OrderSuccessDialog, FormField
 │   │   ├── context/            # React contexts (CartManager)
-│   │   ├── services/           # API client + auth service + cart services
-│   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm, useAISearch, useCategoryFilters, useCategoryProducts)
+│   │   ├── services/           # API client + auth service + cart services + products-api + reviews-api
+│   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm, useAISearch, useCategoryFilters, useCategoryProducts, useProductDetail, useProductReviews)
 │   │   ├── assets/             # Images
 │   │   ├── theme.ts            # MUI theme configuration
 │   │   ├── main.tsx            # Entry point
@@ -38,7 +40,7 @@ O-And-A-Clothing-Store/
 │   │   ├── tests/              # Jest tests for all features
 │   │   ├── app.ts              # Express app setup
 │   │   ├── server.ts           # Entry point
-│   │   ├── seed.ts             # Database seed script (54 products)
+│   │   ├── seed.ts             # Database seed script (54 products + 5 users + reviews + comments)
 │   │   └── swagger.ts          # OpenAPI config
 │   ├── .env.dev / .env.test / .env.prod
 │   └── package.json

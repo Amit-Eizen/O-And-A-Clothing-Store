@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import apiClient from "../services/api-client";
 
 const initialFormState = {
     cardNumber: "",
@@ -13,9 +14,26 @@ const initialFormState = {
     email: "",
 };
 
-const useCheckoutForm = () => {
+const useCheckoutForm = (shipping: number, tax: number) => {
     const [form, setForm] = useState(initialFormState);
     const [errors, setErrors] =  useState<Record<string, string>>({});
+
+    useEffect(() => {
+        apiClient.get("/users/profile")
+            .then((res) => {
+                const data = res.data;
+                setForm((prev) => ({
+                    ...prev,
+                    email: data.email || "",
+                    phoneNumber: data.phoneNumber || "",
+                    streetAddress: data.address?.street || "",
+                    city: data.address?.city || "",
+                    zipCode: data.address?.zipCode || "",
+                    country: data.address?.country || "",
+                }));
+            })
+            .catch(() => {});
+    }, []);
 
     const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
         let value = e.target.value;
@@ -65,11 +83,27 @@ const useCheckoutForm = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (onClose: () => void) => {
-        if (validate()) {
+    const handleSubmit = async (onClose: () => void, onSuccess: (orderNumber: string) => void) => {
+        if (!validate()) return;
+
+        try {
+            const response = await apiClient.post("/orders", {
+                shipping,
+                tax,
+                shippingAddress: {
+                    street: form.streetAddress,
+                    city: form.city,
+                    zipCode: form.zipCode,
+                    country: form.country,
+                },
+            });
+
             setForm(initialFormState);
             setErrors({});
             onClose();
+            onSuccess(response.data.orderNumber);
+        } catch (error) {
+            console.error("Error placing order:", error);
         }
     };
 
