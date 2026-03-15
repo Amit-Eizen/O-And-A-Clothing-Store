@@ -66,3 +66,12 @@
 - Checkout form pre-fills address/contact from user profile (`GET /users/profile`)
 - Order total includes subtotal + shipping + tax (tax field added to Order model)
 - Cart duplicate items fix: moved API calls outside React setState updater (StrictMode safe)
+
+## UI Polish & Code Quality (COMPLETED — branch: feature/ui-polish-and-fixes)
+- Created `client/src/utils/format.ts` — shared helpers (`getAvatarLetters`, `formatDate`, `getImageUrl`) replacing duplication across ~15 files
+- Extracted `clearAuthData()` and exported `saveTokenInLocalStorage()` from `auth-service.ts`
+- `api-client.ts` response interceptor uses auth helpers for auto token refresh on 401
+- Replaced scattered `${apiClient.defaults.baseURL}${path}` with `getImageUrl(path)` across all components
+- Fixed camelCase inconsistency: `getwithPaging` → `getWithPaging` in reviewsController + route
+- Imported shared `AuthRequest` type from middleware instead of local interface in userController
+- Added `_req` convention for unused multer callback parameters

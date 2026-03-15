@@ -162,6 +162,27 @@ router.get("/type/:type", productsController.getProductsByType.bind(productsCont
  */
 router.get("/filter", productsController.getFilteredProducts.bind(productsController));
 
+/**
+ * @swagger
+ * /products/new-arrivals:
+ *   get:
+ *     tags: [Products]
+ *     summary: Get new arrivals for homepage (featured first, then newest)
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *           default: 4
+ *         description: Number of products to return
+ *     responses:
+ *       200:
+ *         description: List of new arrival products
+ *       500:
+ *         description: Server error
+ */
+router.get("/new-arrivals", productsController.getNewArrivals.bind(productsController));
+
 
 /**
  * @swagger

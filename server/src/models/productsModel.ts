@@ -14,6 +14,7 @@ export interface IProduct extends Document {
     soldCount: number;
     tags: string[];
     features: string[];
+    isFeaturedNewArrival: boolean;
 }
 
 const productSchema = new Schema<IProduct>(
@@ -65,6 +66,11 @@ const productSchema = new Schema<IProduct>(
 
         tags: [{ type: String }],
         features: [{ type: String }],
+
+        isFeaturedNewArrival: {
+            type: Boolean,
+            default: false
+        },
     },
     { timestamps: true }
 );

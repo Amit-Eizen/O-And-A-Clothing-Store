@@ -1,7 +1,7 @@
-import apiClient from "../services/api-client";
 import { useState, useEffect, useCallback } from "react";
 import { fetchProductReviews } from "../services/reviews-api";
 import type { ReviewFromServer, ReviewBreakdownItem } from "../services/reviews-api";
+import { getAvatarLetters, formatDate, getImageUrl } from "../utils/format";
 
 interface Review {
     id: string;
@@ -15,20 +15,8 @@ interface Review {
     helpfulCount: number;
     commentCount: number;
     likedByUser: string[];
+    userId: string;
 }
-
-const getAvatarLetters = (username: string): string => {
-    const parts = username.trim().split(" ");
-    if (parts.length >= 2) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return username.slice(0, 2).toUpperCase();
-};
-
-const formatDate = (isoString: string): string => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-};
 
 const mapReview = (review: ReviewFromServer): Review => {
     return {
@@ -39,10 +27,11 @@ const mapReview = (review: ReviewFromServer): Review => {
         rating: review.rating,
         title: review.title,
         text: review.content,
-        images: review.images.map((img) => `${apiClient.defaults.baseURL}${img}`),
+        images: review.images.map((img) => getImageUrl(img)),
         helpfulCount: review.likes.length,
         commentCount: review.commentCount,
         likedByUser: review.likes,
+        userId: review.userId._id,
     };
 };
 

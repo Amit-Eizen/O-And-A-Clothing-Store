@@ -2,10 +2,7 @@ import { Request, Response } from "express";
 import { BaseController } from "./baseController";
 import userService from "../services/userService";
 import { UPLOADS_PATH } from "../middleware/uploadMiddleware";
-
-interface AuthRequest extends Request {
-    userId?: string;
-}
+import { AuthRequest } from "../middleware/authMiddleware";
 
 class UserController extends BaseController {
     constructor() {
@@ -28,7 +25,7 @@ class UserController extends BaseController {
     async updateProfile(req: AuthRequest, res: Response): Promise<void> {
        try {
             const profileImage = req.file
-                ? `${UPLOADS_PATH}/${req.file.filename}`
+                ? `${UPLOADS_PATH}/${req.userId}/profiles/${req.file.filename}`
                 : undefined;
 
             const body = { ...req.body };

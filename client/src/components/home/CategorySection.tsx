@@ -1,8 +1,10 @@
 import { Box, Typography, Grid } from "@mui/material";
 import { Link } from "react-router-dom";
-import womenImage from "../../assets/category-women.jpg";
-import menImage from "../../assets/category-men.jpg";
-import accessoriesImage from "../../assets/category-accessories.jpg";
+import { getImageUrl } from "../../utils/format";
+
+const womenImage = getImageUrl("/public/images/categories/category-women.jpg");
+const menImage = getImageUrl("/public/images/categories/category-men.jpg");
+const accessoriesImage = getImageUrl("/public/images/categories/category-accessories.jpg");
 
 const categories = [
     { label: "Women", image: womenImage, path: "/women" },

@@ -17,12 +17,13 @@ O-And-A-Clothing-Store/
 │   │   │   ├── layout/         # Navbar, Footer, ScrollToTop
 │   │   │   ├── products/       # ProductCard, FiltersDialog
 │   │   │   ├── product-detail/ # ImageGallery, ProductInfo, ProductTabs, ReviewsTab
-│   │   │   ├── reviews/        # ReviewCard, CommentsDialog, ProductSidebar
-│   │   │   ├── account/        # OrdersSection, WishlistSection, AccountSettingsSection
+│   │   │   ├── reviews/        # ReviewCard, CommentsDialog, ProductSidebar, OwnerActions
+│   │   │   ├── account/        # AccountSidebar, OrderHistory, MyReviews, MyComments, Wishlist, WriteReviewDialog, Settings
 │   │   │   └── cart/           # CartItem, OrderSummary, CheckoutDialog, OrderSuccessDialog, FormField
 │   │   ├── context/            # React contexts (CartManager)
 │   │   ├── services/           # API client + auth service + cart services + products-api + reviews-api
 │   │   ├── hooks/              # Custom hooks (useCart, useCheckoutForm, useAISearch, useCategoryFilters, useCategoryProducts, useProductDetail, useProductReviews)
+│   │   ├── utils/              # Shared helpers (format.ts: getAvatarLetters, formatDate, getImageUrl)
 │   │   ├── assets/             # Images
 │   │   ├── theme.ts            # MUI theme configuration
 │   │   ├── main.tsx            # Entry point
@@ -35,7 +36,7 @@ O-And-A-Clothing-Store/
 │   │   ├── models/             # Mongoose schemas (User, Product, Review, Cart, Order, Comment)
 │   │   ├── services/           # Business logic + LLM search
 │   │   ├── controllers/        # Route handlers
-│   │   ├── middleware/         # Auth middleware (JWT + admin check)
+│   │   ├── middleware/         # Auth middleware (JWT + admin check) + upload middleware (Multer)
 │   │   ├── routes/             # Express routes with Swagger docs
 │   │   ├── tests/              # Jest tests for all features
 │   │   ├── app.ts              # Express app setup

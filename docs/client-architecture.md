@@ -37,6 +37,9 @@ client/src/
 │   ├── category-accessories.jpg
 │   └── product-1..4.jpg        # Mock product images
 │
+├── utils/
+│   └── format.ts               # Shared helpers (getAvatarLetters, formatDate, getImageUrl)
+│
 ├── components/
 │   ├── auth/
 │   │   ├── AuthForm.tsx        # Shared form wrapper (submit button, Google login, switch link)
@@ -69,11 +72,16 @@ client/src/
 │   ├── reviews/
 │   │   ├── ReviewCard.tsx      # Review card (rating, title, content, like button, comments)
 │   │   ├── CommentsDialog.tsx  # Comments dialog (fetch from API, post new comment)
+│   │   ├── OwnerActions.tsx    # Edit/Delete buttons for review owner (with confirmation dialog)
 │   │   └── ProductSidebar.tsx  # Product info sidebar on reviews page (image, rating, breakdown)
 │   │
 │   ├── account/
-│   │   ├── OrdersSection.tsx       # Order history list with product images and totals
-│   │   ├── WishlistSection.tsx     # Wishlist grid with remove functionality
+│   │   ├── AccountSidebar.tsx        # Left sidebar (avatar, username, navigation tabs)
+│   │   ├── OrderHistorySection.tsx   # Order history list with product images and totals
+│   │   ├── MyReviewsSection.tsx      # User's reviews with edit/delete actions
+│   │   ├── MyCommentsSection.tsx     # User's comments with links to parent reviews
+│   │   ├── WishlistSection.tsx       # Wishlist grid with remove functionality
+│   │   ├── WriteReviewDialog.tsx     # Dialog for writing/editing product reviews
 │   │   └── AccountSettingsSection.tsx # Profile editing (username, email, phone, address, photo)
 │   │
 │   └── cart/
@@ -97,8 +105,8 @@ client/src/
 │   └── CartManager.tsx          # Cart context (guest localStorage + logged-in API, merge on login)
 │
 ├── services/
-│   ├── api-client.ts           # Axios instance (base URL: localhost:3000)
-│   ├── auth-service.ts         # API calls: loginUser, registerUser, googleSignIn
+│   ├── api-client.ts           # Axios instance (base URL, Bearer token interceptor, auto token refresh)
+│   ├── auth-service.ts         # Auth API + helpers (login, register, googleSignIn, saveTokenInLocalStorage, clearAuthData)
 │   ├── products-api.ts         # Products API (fetchFilteredProducts, getProductTags)
 │   ├── reviews-api.ts          # Reviews API (fetchProductReviews, toggleLike, comments)
 │   ├── cart-localStorage.ts    # Guest cart CRUD (localStorage)
@@ -202,8 +210,12 @@ main.tsx
               │   │   └── CommentsDialog (fetch + post comments via API)
               │   │
               │   ├── MyAccountPage (?section= query param navigation)
-              │   │   ├── OrdersSection (order history with product images)
+              │   │   ├── AccountSidebar (avatar, username, nav tabs)
+              │   │   ├── OrderHistorySection (order history with product images)
+              │   │   ├── MyReviewsSection (user's reviews, edit/delete)
+              │   │   ├── MyCommentsSection (user's comments with review links)
               │   │   ├── WishlistSection (wishlist grid, remove items)
+              │   │   ├── WriteReviewDialog (write/edit review dialog)
               │   │   └── AccountSettingsSection (profile edit + photo upload)
               │   │
               │   └── AISearchPage (uses useAISearch hook)
@@ -377,7 +389,7 @@ Cart items are identified by `productId + size + color` combination (not just pr
 **`useProductReviews(productId)`** - Product reviews from API:
 - Fetches from `GET /reviews/product/:productId` with pagination and sorting
 - Maps server data to UI shape (`content`→`text`, `likes.length`→`helpfulCount`)
-- Helpers: `getAvatarLetters(username)`, `formatDate(isoString)`
+- Uses shared helpers from `utils/format.ts` (`getAvatarLetters`, `formatDate`)
 - Returns `{ reviews, loading, sortBy, setSortBy, averageRating, total, reviewBreakdown, reloadReviews }`
 
 **`useCheckoutForm(shipping, tax)`** - Checkout form logic:
@@ -415,8 +427,27 @@ Validation rules:
 - **Login**: Email required + format check, password required + min 6 chars
 - **Register**: Username min 3, email format, phone required, password min 6, confirm match, terms agreement
 
+### Auth Helpers (`auth-service.ts`)
+- `saveTokenInLocalStorage(data)` — saves token, refreshToken, userId, username to localStorage (exported, reused by api-client interceptor)
+- `clearAuthData()` — removes all auth data from localStorage (exported, reused by api-client interceptor)
+- `logoutUser()` — sends refresh token to server, then calls `clearAuthData()`
+
+### API Client Token Refresh (`api-client.ts`)
+- **Request interceptor**: Attaches `Authorization: Bearer <token>` header to every request
+- **Response interceptor**: On 401 error, automatically attempts token refresh via `POST /refresh-token` with the stored refresh token. On success, saves new tokens with `saveTokenInLocalStorage` and retries the original request. On failure, calls `clearAuthData()` and redirects to `/auth`.
+
 ### Google OAuth (Client)
 - Uses `@react-oauth/google` package
 - `GoogleOAuthProvider` wraps the app in `main.tsx` with `VITE_GOOGLE_CLIENT_ID`
 - `GoogleLogin` component renders the Google button
 - On success, sends credential token to server for verification
+
+---
+
+## Shared Utilities (`utils/format.ts`)
+
+Centralized helper functions used across ~15 components to eliminate duplication:
+
+- **`getAvatarLetters(name)`** — Extracts initials from a username (e.g., "Sarah Miller" → "SM"). Used in review cards, comments, account sidebar.
+- **`formatDate(isoString)`** — Converts ISO date to readable format (e.g., "Dec 15, 2024"). Used in reviews, comments, orders.
+- **`getImageUrl(path)`** — Prepends API base URL to a relative image path. Used everywhere images from the server are displayed (products, profiles, reviews, orders). Replaces scattered `${apiClient.defaults.baseURL}${path}` template literals.

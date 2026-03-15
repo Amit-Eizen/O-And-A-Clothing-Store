@@ -46,7 +46,7 @@ class ReviewsService extends BaseService {
         return review[0];
     }
 
-    async getwithPaging(page: number, limit: number) {
+    async getWithPaging(page: number, limit: number) {
         const skip = (page - 1) * limit;
         const reviews = await this.findReviews({}, { createdAt: -1 }, true, skip, limit);
         const total = await this.model.countDocuments();

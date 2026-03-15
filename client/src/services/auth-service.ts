@@ -14,10 +14,19 @@ export interface IUser {
     };
 }
 
-const saveTokenInLocalStorage = (data: { token: string; refreshToken: string }) => {
+export const saveTokenInLocalStorage = (data: { token: string; refreshToken: string; userId: string; username: string }) => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("refreshToken", data.refreshToken);
+    localStorage.setItem("userId", data.userId);
+    localStorage.setItem("username", data.username);
 }
+
+export const clearAuthData = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+};
 
 export const loginUser = async (email: string, password: string) => {
     const response = await apiClient.post('/login', { email, password });
@@ -43,6 +52,5 @@ export const logoutUser = async () => {
         await apiClient.post('/logout', { refreshToken });
     }
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
+    clearAuthData();
 }

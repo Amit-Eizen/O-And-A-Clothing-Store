@@ -1,4 +1,6 @@
-import { Box, Typography, Chip } from "@mui/material";
+import { Box, Typography, Chip, IconButton } from "@mui/material";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import { Link } from "react-router-dom";
 
 interface ProductCardProps {
@@ -10,9 +12,11 @@ interface ProductCardProps {
     image: string;
     tags: string[];
     category: string;
+    isInWishlist?: boolean;
+    onWishlistToggle?: () => void;
 }
 
-const ProductCard = ({ id, name, type, price, oldPrice, image, tags, category }: ProductCardProps) => {
+const ProductCard = ({ id, name, type, price, oldPrice, image, tags, category, isInWishlist, onWishlistToggle }: ProductCardProps) => {
     return (
         <Link to={`/${category}/${id}`} style={{ textDecoration: "none", color: "inherit" }}>
             {/* Image */}
@@ -40,6 +44,29 @@ const ProductCard = ({ id, name, type, price, oldPrice, image, tags, category }:
                         />
                     ))}
                 </Box>
+
+                {/* Wishlist Heart */}
+                {onWishlistToggle && (
+                    <IconButton
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onWishlistToggle();
+                        }}
+                        sx={{
+                            position: "absolute",
+                            top: 12,
+                            right: 12,
+                            backgroundColor: "rgba(255,255,255,0.8)",
+                            "&:hover": { backgroundColor: "rgba(255,255,255,1)" },
+                        }}
+                    >
+                        {isInWishlist ? (
+                            <FavoriteIcon sx={{ color: "#e53935", fontSize: 20 }} />
+                        ) : (
+                            <FavoriteBorderIcon sx={{ fontSize: 20 }} />
+                        )}
+                    </IconButton>
+                )}
             </Box>
 
             {/* Info */}

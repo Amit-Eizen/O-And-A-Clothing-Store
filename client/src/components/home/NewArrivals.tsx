@@ -1,19 +1,22 @@
+import { useState, useEffect } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import ProductCard from "../products/ProductCard";
 import { Link } from "react-router-dom";
-import product1 from "../../assets/product-1.jpg";
-import product2 from "../../assets/product-2.jpg";
-import product3 from "../../assets/product-3.jpg";
-import product4 from "../../assets/product-4.jpg";
-
-const products = [
-    { id: 1, name: "Cashmere Coat", type: "Jacket", price: 489, oldPrice: 650, image: product1, tags: ["NEW", "SALE"], category: "women" },
-    { id: 2, name: "Silk Midi Dress", type: "Dress", price: 325, image: product2, tags: ["NEW"], category: "women" },
-    { id: 3, name: "Leather Tote", type: "Bag", price: 445, image: product3, tags: ["NEW"], category: "accessories" },
-    { id: 4, name: "Chelsea Boots", type: "Shoes", price: 365, image: product4, tags: ["NEW"], category: "women" },
-];
+import { fetchNewArrivals, getProductTags } from "../../services/products-api";
+import type { ProductFromServer } from "../../services/products-api";
+import { getImageUrl } from "../../utils/format";
+import useWishlist from "../../hooks/useWishlist";
 
 const NewArrivals = () => {
+    const [products, setProducts] = useState<ProductFromServer[]>([]);
+    const { isInWishlist, toggleWishlist } = useWishlist();
+
+    useEffect(() => {
+        fetchNewArrivals(4)
+            .then((res) => setProducts(res))
+            .catch(() => {});
+    }, []);
+
     return (
         <Box sx={{ py: 8, maxWidth: "1280px", mx: "auto", px: { xs: 2, md: 4 } }}>
             {/* Header */}
@@ -36,8 +39,19 @@ const NewArrivals = () => {
             {/* Product Grid */}
             <Grid container spacing={3}>
                 {products.map((product) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }} key={product.id}>
-                        <ProductCard {...product} />
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }} key={product._id}>
+                        <ProductCard
+                            id={product._id}
+                            name={product.name}
+                            type={product.type}
+                            price={product.salePrice || product.price}
+                            oldPrice={product.salePrice ? product.price : undefined}
+                            image={getImageUrl(product.images[0])}
+                            tags={getProductTags(product)}
+                            category={product.category}
+                            isInWishlist={isInWishlist(product._id)}
+                            onWishlistToggle={() => toggleWishlist(product._id)}
+                        />
                     </Grid>
                 ))}
             </Grid>

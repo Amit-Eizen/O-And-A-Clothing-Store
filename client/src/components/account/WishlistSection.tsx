@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Typography, Grid, Button, IconButton } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import apiClient from "../../services/api-client";
+import { getImageUrl } from "../../utils/format";
 
 interface WishlistProduct {
     _id: string;
@@ -75,7 +76,7 @@ const WishlistSection = () => {
                             {/* Product Image */}
                             <Box
                                 component="img"
-                                src={`${apiClient.defaults.baseURL}${product.images?.[0]}`}
+                                src={getImageUrl(product.images?.[0] || "")}
                                 sx={{ width: "100%", height: 250, objectFit: "cover", cursor: "pointer" }}
                                 onClick={() => window.location.href = `/${product.category}/${product._id}`}
                             />

@@ -2,18 +2,30 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-const uploadDir = path.join(__dirname, "../../public/uploads");
-
-// Create uploads directory if it doesn't exist
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+const getUploadDir = (userId: string, subfolder: string): string => {
+    const dir = path.join(__dirname, "../../public/uploads", userId, subfolder);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true});
+    }
+    return dir;
 }
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
+const profileStorage = multer.diskStorage({
+    destination: (req: any, file, cb) => {
+        cb(null, getUploadDir(req.userId, "profiles"));
     },
-    filename: (req, file, cb) => {
+    filename: (_req, file, cb) => {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        const ext = path.extname(file.originalname);
+        cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+    }
+});
+
+const reviewStorage = multer.diskStorage({
+    destination: (req: any, file, cb) => {
+        cb(null, getUploadDir(req.userId, "reviews"));
+    },
+    filename: (_req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const ext = path.extname(file.originalname);
         cb(null, file.fieldname + "-" + uniqueSuffix + ext);
@@ -34,14 +46,14 @@ const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.
 
 // Single file upload for profile images
 export const uploadProfileImage = multer({
-    storage,
+    storage: profileStorage,
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 }).single("profileImage");
 
 // Multiple file upload for review images (max 5)
 export const uploadReviewImages = multer({
-    storage,
+    storage: reviewStorage,
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB per file
 }).array("images", 5);

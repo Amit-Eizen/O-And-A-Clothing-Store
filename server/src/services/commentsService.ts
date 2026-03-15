@@ -6,6 +6,12 @@ class CommentsService extends BaseService {
         super(commentsModel);
     }
 
+    async create(data: any) {
+        const comment = await this.model.create(data);
+        const populated = await comment.populate("userId", "username profileImage");
+        return populated;
+    }
+
     async getCommentsByReviewId(reviewId: string) {
         const comments = await this.model.find({ reviewId }).sort({ createdAt: -1 }).populate('userId', 'username profileImage');
         return comments;

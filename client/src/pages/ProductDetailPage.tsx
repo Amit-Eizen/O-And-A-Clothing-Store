@@ -1,9 +1,10 @@
-import { Box, Typography, Breadcrumbs, Link as MuiLink } from "@mui/material";
+import { Box, Typography, Breadcrumbs, Link as MuiLink, Snackbar } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import useProductDetail from "../hooks/useProductDetail";
 import useProductReviews from "../hooks/useProductReviews";
 import useCart from "../hooks/useCart";
+import useWishlist from "../hooks/useWishlist";
 import ImageGallery from "../components/product-detail/ImageGallery";
 import ProductInfo from "../components/product-detail/ProductInfo";
 import ProductTabs from "../components/product-detail/ProductTabs";
@@ -28,6 +29,7 @@ const ProductDetailPage = () => {
     } = useProductDetail(id);
 
     const { addItem } = useCart();
+    const { isInWishlist, toggleWishlist, snackMessage, closeSnack } = useWishlist();
 
     if (!product) {
         return null;
@@ -125,6 +127,8 @@ const ProductDetailPage = () => {
                             onDecrement={decrementQuantity}
                             savings={savings}
                             onAddToCart={handleAddToCart}
+                            isInWishlist={isInWishlist(id!)}
+                            onWishlistToggle={() => toggleWishlist(id!)}
                         />
                     </Box>
                 </Box>
@@ -139,6 +143,12 @@ const ProductDetailPage = () => {
                     />
                 </Box>
             </Box>
+            <Snackbar
+                open={snackMessage !== ""}
+                autoHideDuration={3000}
+                onClose={closeSnack}
+                message={snackMessage}
+            />
         </Box>
     );
 };

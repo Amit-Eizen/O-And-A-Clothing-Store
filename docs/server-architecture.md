@@ -6,7 +6,7 @@
 server/src/
 ├── app.ts                      # Express app setup (MongoDB, Swagger, CORS, routes)
 ├── server.ts                   # Entry point
-├── seed.ts                     # Database seed script (54 sample products with images)
+├── seed.ts                     # Database seed script (54 products + 5 users + reviews + comments)
 ├── swagger.ts                  # Swagger/OpenAPI configuration
 │
 ├── models/
@@ -15,16 +15,19 @@ server/src/
 │   ├── reviewsModel.ts         # Review schema
 │   ├── cartModel.ts            # Cart schema (one per user)
 │   ├── ordersModel.ts          # Order schema
-│   └── commentsModel.ts        # Comment schema
+│   ├── commentsModel.ts        # Comment schema
+│   └── wishlistModel.ts        # Wishlist schema (one per user, array of productIds)
 │
 ├── services/
 │   ├── baseService.ts          # Reusable CRUD service (getAll, getById, create, update, delete)
 │   ├── authService.ts          # Auth logic (register, login, logout, refreshToken, googleSignIn)
-│   ├── reviewsService.ts       # Reviews (getWithPaging, getByUserId, getByProductId, toggleLike)
+│   ├── userService.ts          # User profile (getProfile, updateProfile, getProfileNameAndImage)
+│   ├── reviewsService.ts       # Reviews (getWithPaging, getByUserId, getByProductId, toggleLike, cascade delete comments)
 │   ├── productsService.ts      # Products (getProductsByCategory, searchProducts, getFilteredProducts with pagination)
 │   ├── cartService.ts          # Cart (getCartByUserId, addItem, updateQuantity, removeItem, clearCart, mergeCart)
 │   ├── ordersService.ts        # Orders (createOrder, getOrdersByUserId, updateOrderStatus, generateOrderNumber)
-│   ├── commentsService.ts      # Comments (getCommentsByReviewId)
+│   ├── commentsService.ts      # Comments (getCommentsByReviewId, getByUserId)
+│   ├── wishlistService.ts      # Wishlist (getWishlist, addProduct, removeProduct)
 │   └── LLM/
 │       ├── llmService.ts       # Gemini API client (Google Generative AI SDK)
 │       └── searchService.ts    # Smart search (LLM filter extraction + MongoDB query)
@@ -32,23 +35,28 @@ server/src/
 ├── controllers/
 │   ├── baseController.ts       # Reusable CRUD controller with HTTP status codes
 │   ├── authController.ts       # Auth endpoints handler
+│   ├── userController.ts       # User profile endpoints (get/update profile, profile name+image)
 │   ├── reviewsController.ts    # Reviews (create with userId from token, paging, like, getByProductId, ownership check on update/delete)
 │   ├── productsControllers.ts  # Products (getByCategory, search, getFilteredProducts)
 │   ├── searchController.ts     # Smart search endpoint (LLM-powered)
 │   ├── cartController.ts       # Cart endpoints
 │   ├── ordersController.ts     # Orders endpoints
-│   └── commentsControllers.ts  # Comments (create with userId from token, getByReview)
+│   ├── commentsControllers.ts  # Comments (create with userId from token, getByReview)
+│   └── wishlistController.ts   # Wishlist endpoints
 │
 ├── middleware/
-│   └── authMiddleware.ts       # JWT verification (authenticate) + admin check (authorizeAdmin)
+│   ├── authMiddleware.ts       # JWT verification (authenticate) + admin check (authorizeAdmin)
+│   └── uploadMiddleware.ts     # Multer file upload (profile images + review images, user-specific folders)
 │
 ├── routes/
 │   ├── authRoute.ts            # Auth routes with Swagger docs
+│   ├── userRoute.ts            # User profile routes (authenticated)
 │   ├── reviewsRoute.ts         # Reviews routes with Swagger docs
 │   ├── productsRoute.ts        # Products routes with Swagger docs (admin-only for CUD)
 │   ├── cartRoute.ts            # Cart routes with Swagger docs (all authenticated)
 │   ├── ordersRoute.ts          # Orders routes with Swagger docs (updateStatus admin-only)
-│   └── commentsRoute.ts        # Comments routes with Swagger docs
+│   ├── commentsRoute.ts        # Comments routes with Swagger docs
+│   └── wishlistRoute.ts        # Wishlist routes (all authenticated)
 │
 └── tests/
     ├── auth.test.ts            # Auth tests (register, login, refresh, logout, Google OAuth)
@@ -81,7 +89,7 @@ BaseController (getAll, getById, create, update, delete - with HTTP status codes
     └── CommentsController extends BaseController (overrides create for userId from token, adds getByReview)
 ```
 
-Auth, Cart, and Orders don't use base controller classes - Auth has different logic, Cart and Orders use custom controller functions (not class-based).
+Auth, Cart, Orders, and Wishlist don't use base controller classes - Auth has different logic, Cart/Orders/Wishlist use custom controller functions (not class-based). UserController extends BaseController and adds profile-specific methods.
 
 ---
 
@@ -120,9 +128,16 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 
 ### Middleware
 
-`authMiddleware.ts` provides two middlewares:
-- **authenticate**: Extracts JWT from `Authorization: Bearer <token>` header, verifies it, attaches `userId` to request. Used on protected routes.
+**`authMiddleware.ts`** provides two middlewares:
+- **authenticate**: Extracts JWT from `Authorization: Bearer <token>` header, verifies it, attaches `userId` to request. Exports `AuthRequest` interface (extends Express `Request` with `userId` field). Used on protected routes.
 - **authorizeAdmin**: Checks that the authenticated user has `role: "admin"` in DB. Used on product management routes (create/update/delete) and order status updates. Returns 403 if not admin.
+
+**`uploadMiddleware.ts`** provides file upload handling via Multer:
+- **`uploadProfileImage`**: Single file upload for profile images (max 5MB)
+- **`uploadReviewImages`**: Multiple file upload for review images (max 5 files, 5MB each)
+- Files stored in `public/uploads/{userId}/{profiles|reviews}/` — organized per user
+- File filter: only allows jpeg, jpg, png, gif, webp
+- Exports `UPLOADS_PATH` constant for building image URLs in controllers
 
 ---
 
@@ -198,6 +213,12 @@ Auth, Cart, and Orders don't use base controller classes - Auth has different lo
 | userId | ObjectId (ref: user) | Who wrote the comment |
 | reviewId | ObjectId (ref: reviews) | Which review it belongs to |
 | content | string | Comment text |
+
+### Wishlist
+| Field | Type | Notes |
+|-------|------|-------|
+| userId | ObjectId (ref: user) | Required, unique (one wishlist per user) |
+| products | ObjectId[] (ref: products) | Array of product references |
 
 ---
 
