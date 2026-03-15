@@ -10,25 +10,6 @@
 - Add change password section in Account Settings page
 - Validate current password with bcrypt before allowing change
 
-## Reviews — Only Purchasers Can Write
-- Only users who purchased a specific product can write a review for it
-- Server: check if user has a delivered order containing the productId before allowing review creation
-- Client: conditionally show "Write a Review" button based on purchase history
-
-## Wishlist — Full Client Integration
-- "Add to Wishlist" button on ProductDetailPage currently has no onClick handler
-- No heart icon on ProductCard components
-- Need useWishlist hook for consistent operations across components
-- Show filled/outlined heart based on whether product is in wishlist
-
-## NewArrivals — Connect to API
-- Currently hardcoded with 4 static products from assets
-- Should fetch newest products from server (`sort=newest`, `limit=4`)
-
-## Move Assets to Server
-- `client/src/assets/` still has images used by homepage components (hero, categories, auth page)
-- These should be served from the server like product images
-
 ---
 
 ## Category Page — API Connection with Paging (COMPLETED — branch: feature/category-paging)
@@ -75,3 +56,22 @@
 - Fixed camelCase inconsistency: `getwithPaging` → `getWithPaging` in reviewsController + route
 - Imported shared `AuthRequest` type from middleware instead of local interface in userController
 - Added `_req` convention for unused multer callback parameters
+
+## Wishlist — Full Client Integration (COMPLETED — branch: feature/ui-polish-and-fixes)
+- Added `useWishlist` hook for consistent wishlist operations across components
+- Heart toggle on ProductCard (filled/outlined based on wishlist state)
+- "Add to Wishlist" button on ProductDetailPage wired to API
+- Wishlist grid in My Account with remove functionality
+
+## NewArrivals — Connect to API (COMPLETED — branch: feature/ui-polish-and-fixes)
+- Fetches newest products from server (`GET /products/new-arrivals`)
+- Replaced hardcoded static products with real API data
+
+## Move Assets to Server (COMPLETED — branch: feature/ui-polish-and-fixes)
+- Moved hero, category, and auth images from `client/src/assets/` to `server/public/images/`
+- All components now use `getImageUrl()` to load images from server
+
+## Reviews — Only Purchasers Can Write (COMPLETED — branch: feature/ui-polish-and-fixes)
+- Server: `hasPurchased` check in reviewsController — verifies user has an order with status processing/shipped/delivered containing the productId
+- Client: "Write a Review" button shown conditionally based on purchase history
+- Returns 403 if user hasn't purchased the product

@@ -3,6 +3,7 @@ import { Express } from "express";
 import mongoose from "mongoose";
 import reviewsModel from "../models/reviewsModel";
 import userModel from "../models/userModel";
+import ordersModel from "../models/ordersModel";
 import { initTestApp, createTestUser, registerTestUser, createTestProduct, closeTestDB } from "./testUtils";
 
 let app: Express;
@@ -16,12 +17,33 @@ beforeAll(async () => {
     app = await initTestApp();
     await userModel.deleteMany();
     await reviewsModel.deleteMany();
+    await ordersModel.deleteMany();
 
     await registerTestUser(testUser);
 
     const product = await createTestProduct();
     testProductId = product._id.toString();
-    
+
+    // Create order so hasPurchased check passes
+    await ordersModel.create({
+        userId: testUser._id,
+        orderNumber: "ORD-2026-REV",
+        items: [{
+            productId: testProductId,
+            quantity: 1,
+            size: "M",
+            color: "black",
+            price: 99.9
+        }],
+        totalPrice: 99.9,
+        status: "processing",
+        shippingAddress: {
+            street: "1 Test St",
+            city: "Test City",
+            zipCode: "12345",
+            country: "Israel"
+        }
+    });
 });
 
 afterAll(async () => {

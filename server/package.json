@@ -14,6 +14,9 @@
     "testCart": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/cart.test.ts",
     "testOrders": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/orders.test.ts",
     "testWishlist": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/wishlist.test.ts",
+    "testUsers": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/users.test.ts",
+    "testProductsFilter": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/productsFilter.test.ts",
+    "testReviewsAdvanced": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/reviewsAdvanced.test.ts",
     "testLLMSearch": "tsc && jest --runInBand --detectOpenHandles --forceExit ./src/tests/services/llmService.test.ts"
   },
   "keywords": [],

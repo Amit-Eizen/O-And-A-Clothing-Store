@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import commentsModel from "../models/commentsModel";
 import reviewsModel from "../models/reviewsModel";
 import userModel from "../models/userModel";
+import ordersModel from "../models/ordersModel";
 import { initTestApp, createTestUser, registerTestUser, createTestProduct, closeTestDB } from "./testUtils";
 
 let app: Express;
@@ -18,10 +19,32 @@ beforeAll(async () => {
     await commentsModel.deleteMany();
     await reviewsModel.deleteMany();
     await userModel.deleteMany();
+    await ordersModel.deleteMany();
 
     await registerTestUser(testUser);
 
     const product = await createTestProduct();
+
+    // Create order so hasPurchased check passes
+    await ordersModel.create({
+        userId: testUser._id,
+        orderNumber: "ORD-2026-COM",
+        items: [{
+            productId: product._id,
+            quantity: 1,
+            size: "M",
+            color: "black",
+            price: 99.9
+        }],
+        totalPrice: 99.9,
+        status: "delivered",
+        shippingAddress: {
+            street: "1 Test St",
+            city: "Test City",
+            zipCode: "12345",
+            country: "Israel"
+        }
+    });
 
     // Create a test review
     const reviewResponse = await request(app)
@@ -54,7 +77,7 @@ describe("Comments API Tests", () => {
             expect(response.status).toBe(201);
             expect(response.body).toHaveProperty("_id");
             expect(response.body.content).toBe("This is a test comment.");
-            expect(response.body.userId).toBe(testUser._id);
+            expect(response.body.userId._id).toBe(testUser._id);
             expect(response.body.reviewId).toBe(reviewId);
             commentId = response.body._id;
         });
