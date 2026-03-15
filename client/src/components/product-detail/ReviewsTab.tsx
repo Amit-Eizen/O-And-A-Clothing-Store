@@ -2,7 +2,6 @@ import { Box, Typography, Rating, Button, LinearProgress } from "@mui/material";
 import { Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 interface ReviewsTabProps {
     rating: number;

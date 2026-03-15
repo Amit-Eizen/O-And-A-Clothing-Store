@@ -25,7 +25,7 @@ const MyAccountPage = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
-            navigate("/auth");
+            navigate("/auth", { replace: true });
             return;
         }
 
@@ -35,7 +35,7 @@ const MyAccountPage = () => {
                 setLoading(false);
             })
             .catch(() => {
-                navigate("/auth");
+                navigate("/auth", { replace: true });
             });
     }, [navigate]);
 
@@ -70,7 +70,7 @@ const MyAccountPage = () => {
                 />
 
                 <Box sx={{ flex: 1, p: 4 , pt: 12}}>
-                    {activeSection === "orders" && <OrderHistorySection />}
+                    {activeSection === "orders" && <OrderHistorySection userId={user._id} />}
                     
                     {activeSection === "reviews" && <MyReviewsSection userId={user._id} />}
 

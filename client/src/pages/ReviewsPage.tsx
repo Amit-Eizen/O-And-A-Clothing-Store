@@ -8,7 +8,7 @@ import ReviewCard from "../components/reviews/ReviewCard";
 const ReviewsPage = () => {
     const { category, id } = useParams<{ category: string; id: string }>();
     const { product } = useProductDetail(id);
-    const { reviews, sortBy, setSortBy, averageRating, total, reviewBreakdown, loading, reloadReviews } = useProductReviews(id);
+    const { reviews, sortBy, setSortBy, averageRating, total, reviewBreakdown, reloadReviews } = useProductReviews(id);
 
     if (!product) {
         return null;
@@ -71,6 +71,7 @@ const ReviewsPage = () => {
                                 helpfulCount={review.helpfulCount}
                                 commentCount={review.commentCount}
                                 likedByUser={review.likedByUser}
+                                reviewerUserId={review.userId}
                                 onReviewChanged={reloadReviews}
                             />
                         ))}

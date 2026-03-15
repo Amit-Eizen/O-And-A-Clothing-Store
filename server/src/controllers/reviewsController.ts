@@ -3,6 +3,8 @@ import { BaseController } from "./baseController";
 import reviewsService from "../services/reviewsService";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { UPLOADS_PATH } from "../middleware/uploadMiddleware";
+import ordersModel from "../models/ordersModel";
+import commentsModel from "../models/commentsModel";
 
 class ReviewsController extends BaseController {
     constructor() {
@@ -11,10 +13,33 @@ class ReviewsController extends BaseController {
 
     async create(req: AuthRequest, res: Response): Promise<void> {
         try {
+            // Check if user purchased this product
+            const hasPurchased = await ordersModel.exists({
+                userId: req.userId,
+                "items.productId": req.body.productId,
+                status: { $in: ["processing", "shipped", "delivered"] }
+            });
+
+            if (!hasPurchased) {
+                res.status(403).json({ message: "You can only review products you have purchased" });
+                return;
+            }
+
+            // Check if user already reviewed this product
+            const alreadyReviewed = await reviewsService.model.exists({
+                userId: req.userId,
+                productId: req.body.productId
+            });
+
+            if (alreadyReviewed) {
+                res.status(409).json({ message: "You have already reviewed this product" });
+                return;
+            }
+
             const images: string[] = [];
             if (req.files && Array.isArray(req.files)) {
                 for (const file of req.files) {
-                    images.push(`${UPLOADS_PATH}/${file.filename}`);
+                    images.push(`${UPLOADS_PATH}/${req.userId}/reviews/${file.filename}`);
                 }
             }
 
@@ -30,6 +55,7 @@ class ReviewsController extends BaseController {
         }
     }
 
+
     async getById(req: Request, res: Response): Promise<void> {
         try {
             const review = await reviewsService.getById(String(req.params.id));
@@ -43,11 +69,11 @@ class ReviewsController extends BaseController {
         }
     }
 
-    async getwithPaging(req: Request, res: Response): Promise<void> {
+    async getWithPaging(req: Request, res: Response): Promise<void> {
         try {
             const page = parseInt(String(req.query.page)) || 1;
             const limit = parseInt(String(req.query.limit)) || 10;
-            const result = await reviewsService.getwithPaging(page, limit);
+            const result = await reviewsService.getWithPaging(page, limit);
             res.status(200).json(result);
         } catch (error) {
             res.status(500).json({ error: "Error retrieving reviews with paging" });
@@ -98,7 +124,7 @@ class ReviewsController extends BaseController {
                 return;
             }
 
-            if (review.userId.toString() !== req.userId) {
+            if (review.userId._id.toString() !== req.userId) {
                 res.status(403).json({ message: "Unauthorized to update this review" });
                 return;
             }
@@ -106,7 +132,7 @@ class ReviewsController extends BaseController {
             const images: string[] = [...(review.images || [])];
             if (req.files && Array.isArray(req.files)) {
                 for (const file of req.files) {
-                    images.push(`${UPLOADS_PATH}/${file.filename}`);
+                    images.push(`${UPLOADS_PATH}/${req.userId}/reviews/${file.filename}`);
                 }
             }
 
@@ -116,7 +142,7 @@ class ReviewsController extends BaseController {
                 images.push(...keepImages);
                 if (req.files && Array.isArray(req.files)) {
                     for (const file of req.files) {
-                        images.push(`${UPLOADS_PATH}/${file.filename}`);
+                        images.push(`${UPLOADS_PATH}/${req.userId}/reviews/${file.filename}`);
                     }
                 }
             }
@@ -142,11 +168,12 @@ class ReviewsController extends BaseController {
                 return;
             }
 
-            if (review.userId.toString() !== req.userId) {
+            if (review.userId._id.toString() !== req.userId) {
                 res.status(403).json({ message: "Unauthorized to delete this review" });
                 return;
             }
 
+            await commentsModel.deleteMany({ reviewId: req.params.id });
             await reviewsService.delete(String(req.params.id));
             res.status(200).json({ message: "Review deleted successfully" });
             } catch (error) {

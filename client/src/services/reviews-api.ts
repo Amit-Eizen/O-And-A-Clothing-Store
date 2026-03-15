@@ -75,3 +75,21 @@ export const deleteComment = async (commentId: string): Promise<void> => {
 export const updateComment = async (commentId: string, content: string): Promise<void> => {
     await apiClient.put(`/comments/${commentId}`, { content });
 };
+
+export const createReview = async (productId: string, title: string, content: string, rating: number, images?: File[]): Promise<ReviewFromServer> => {
+    const formData = new FormData();
+    formData.append("productId", productId);
+    formData.append("title", title);
+    formData.append("content", content);
+    formData.append("rating", String(rating));
+
+    if (images) {
+        for (const image of images) {
+            formData.append("images", image);
+        }
+    }
+
+    const response = await apiClient.post("/reviews", formData);
+    return response.data;
+};
+

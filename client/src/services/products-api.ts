@@ -72,9 +72,9 @@ export const fetchFilteredProducts = async (params: FilterProductsParams): Promi
 export function getProductTags(product: ProductFromServer): string[] {
     const tags: string[] = [];
 
-    const towWeeksAgo = new Date();
-    towWeeksAgo.setDate(towWeeksAgo.getDate() - 14);
-    if( new Date(product.createdAt) > towWeeksAgo) {
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    if( new Date(product.createdAt) > twoWeeksAgo) {
         tags.push("NEW");
     }
 
@@ -84,3 +84,8 @@ export function getProductTags(product: ProductFromServer): string[] {
 
     return tags;
 }
+
+export const fetchNewArrivals = async (limit: number = 4): Promise<ProductFromServer[]> => {
+    const response = await apiClient.get("/products/new-arrivals", { params: { limit } });
+    return response.data;
+};

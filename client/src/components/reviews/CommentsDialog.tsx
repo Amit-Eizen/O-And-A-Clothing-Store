@@ -2,9 +2,14 @@ import { useState, useEffect } from "react";
 import { Box, Typography, Avatar, Dialog, IconButton, TextField, Button, CircularProgress } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Rating from "@mui/material/Rating";
-import { fetchReviewComments, postComment } from "../../services/reviews-api";
+import { fetchReviewComments, postComment, deleteComment, updateComment } from "../../services/reviews-api";
+import type { CommentFromServer } from "../../services/reviews-api";
+import OwnerActions from "./OwnerActions";
+import { getAvatarLetters, formatDate } from "../../utils/format";
 
 interface Comment {
+    id: string,
+    userId: string
     name: string;
     avatarLetters: string;
     time: string;
@@ -26,8 +31,19 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
     const [newComment, setNewComment] = useState("");
     const [comments, setComments] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [editingComment, setEditingComment] = useState<{ id: string; content: string } | null>(null);
 
-    const currentUserAvatar = localStorage.getItem("username")?.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "?";
+    const currentUserAvatar = getAvatarLetters(localStorage.getItem("username") || "");
+
+    const mapComment = (c: CommentFromServer): Comment => ({
+        id: c._id,
+        userId: c.userId._id,
+        name: c.userId.username,
+        avatarLetters: getAvatarLetters(c.userId.username),
+        time: formatDate(c.createdAt),
+        text: c.content,
+    });
 
     useEffect(() => {
         if (!open) return;
@@ -36,12 +52,7 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
             setLoading(true);
             try {
                 const data = await fetchReviewComments(reviewId);
-                setComments(data.map((c) => ({
-                    name: c.userId.username,
-                    avatarLetters: c.userId.username.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
-                    time: new Date(c.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-                    text: c.content,
-                })));
+                setComments(data.map(mapComment));
             } catch (error) {
                 console.error("Error fetching comments:", error);
             } finally {
@@ -53,22 +64,41 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
     }, [open, reviewId]);
 
     const handleAddComment = async () => {
-        if (!newComment.trim()) return;
+        if (!newComment.trim() || submitting) return;
 
+        setSubmitting(true);
         try {
             const createdComment = await postComment(reviewId, newComment);
-            setComments([...comments, {
-                name: createdComment.userId.username,
-                avatarLetters: createdComment.userId.username.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
-                time: new Date(createdComment.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-                text: createdComment.content,
-            }]);
+            setComments([...comments, mapComment(createdComment)]);
             setNewComment("");
             if (onCommentAdded) {
                 onCommentAdded();
             }
         } catch (error) {
             console.error("Error posting comment:", error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        if (!window.confirm("Are you sure you want to delete this comment?")) return;
+        try {
+            await deleteComment(commentId);
+            setComments(comments.filter((c) => c.id !== commentId));
+        } catch (error) {
+            console.error("Error deleting comment:", error);
+        }
+    };
+
+    const handleEditComment = async () => {
+        if (!editingComment || !editingComment.content.trim()) return;
+        try {
+            await updateComment(editingComment.id, editingComment.content);
+            setComments(comments.map((c) => c.id === editingComment.id ? { ...c, text: editingComment.content } : c));
+            setEditingComment(null);
+        } catch (error) {
+            console.error("Error updating comment:", error);
         }
     };
 
@@ -117,7 +147,7 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
                                     <Avatar sx={{ width: 36, height: 36, backgroundColor: "#f5f5f5", color: "#666", fontSize: 12, fontWeight: 600 }}>
                                         {comment.avatarLetters}
                                     </Avatar>
-                                    <Box>
+                                   <Box sx={{ flex: 1 }}>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                             <Typography sx={{ fontWeight: 600, fontSize: 13 }}>
                                                 {comment.name}
@@ -125,10 +155,30 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
                                             <Typography sx={{ fontSize: 12, color: "#999" }}>
                                                 {comment.time}
                                             </Typography>
+                                            <OwnerActions
+                                                isOwner={localStorage.getItem("userId") === comment.userId}
+                                                onEdit={() => setEditingComment({ id: comment.id, content: comment.text })}
+                                                onDelete={() => handleDeleteComment(comment.id)}
+                                            />
                                         </Box>
-                                        <Typography sx={{ fontSize: 14, color: "#444", mt: 0.5 }}>
-                                            {comment.text}
-                                        </Typography>
+                                        {editingComment && editingComment.id === comment.id ? (
+                                            <Box sx={{ mt: 0.5 }}>
+                                                <TextField
+                                                    fullWidth
+                                                    size="small"
+                                                    value={editingComment.content}
+                                                    onChange={(e) => setEditingComment({ ...editingComment, content: e.target.value })}
+                                                />
+                                                <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
+                                                    <Button size="small" onClick={handleEditComment} sx={{ fontSize: 12 }}>Save</Button>
+                                                    <Button size="small" onClick={() => setEditingComment(null)} sx={{ fontSize: 12 }}>Cancel</Button>
+                                                </Box>
+                                            </Box>
+                                        ) : (
+                                            <Typography sx={{ fontSize: 14, color: "#444", mt: 0.5 }}>
+                                                {comment.text}
+                                            </Typography>
+                                        )}
                                     </Box>
                                 </Box>
                             ))}
@@ -154,7 +204,7 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
                         <Button
                             variant="contained"
                             onClick={handleAddComment}
-                            disabled={!newComment.trim()}
+                            disabled={!newComment.trim() || submitting}
                             sx={{
                                 backgroundColor: "#c8a951",
                                 fontSize: 13,

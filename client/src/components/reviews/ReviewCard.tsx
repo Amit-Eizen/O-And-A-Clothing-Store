@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Box, Typography, Avatar, Rating, Dialog } from "@mui/material";
+import { Box, Typography, Avatar, Rating, Dialog, TextField, Button } from "@mui/material";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CommentsDialog from "./CommentsDialog";
-import { toggleReviewLike } from "../../services/reviews-api";
+import { toggleReviewLike, deleteReview, updateReview } from "../../services/reviews-api";
+import OwnerActions from "./OwnerActions";
 
 interface ReviewCardProps {
     reviewId: string,
@@ -18,14 +19,17 @@ interface ReviewCardProps {
     commentCount: number;
     likedByUser: string[];
     onReviewChanged?: () => void;
+    reviewerUserId: string;
 }
 
-const ReviewCard = ({ reviewId, reviewerName, reviewerAvatar, date, rating, title, text, images, helpfulCount, commentCount, likedByUser, onReviewChanged }: ReviewCardProps) => {
+const ReviewCard = ({ reviewId, reviewerName, reviewerAvatar, date, rating, title, text, images, helpfulCount, commentCount, likedByUser, onReviewChanged, reviewerUserId }: ReviewCardProps) => {
     const userId = localStorage.getItem("userId");
+    const isOwner = userId === reviewerUserId;
     const [liked, setLiked] = useState(userId ? likedByUser.includes(userId) : false);
     const [currentHelpfulCount, setCurrentHelpfulCount] = useState(helpfulCount);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [commentsOpen, setCommentsOpen] = useState(false);
+    const [editData, setEditData] = useState<{ title: string; content: string; rating: number } | null>(null);
 
     const handleLike = async () => {
         if (liked) {
@@ -44,6 +48,31 @@ const ReviewCard = ({ reviewId, reviewerName, reviewerAvatar, date, rating, titl
         }
     };
 
+    const handleDelete = async () => {
+        if (!window.confirm("Are you sure you want to delete this review?")) return;
+        try {
+            await deleteReview(reviewId);
+            if (onReviewChanged) {
+                onReviewChanged();
+            }
+        } catch (error) {
+            console.error("Error deleting review:", error);
+        }
+    };
+
+    const handleEdit = async () => {
+        if (!editData || !editData.title.trim() || !editData.content.trim()) return;
+        try {
+            await updateReview(reviewId, { title: editData.title, content: editData.content, rating: editData.rating });
+            setEditData(null);
+            if (onReviewChanged) {
+                onReviewChanged();
+            }
+        } catch (error) {
+            console.error("Error updating review:", error);
+        }
+    };
+
     return (
         <Box sx={{ border: "1px solid #eee", borderRadius: 1, p: 2 }}>
             {/* Header - Avatar, Name, Date */}
@@ -57,20 +86,29 @@ const ReviewCard = ({ reviewId, reviewerName, reviewerAvatar, date, rating, titl
                 <Typography sx={{ fontSize: 12, color: "#999", ml: "auto" }}>
                     {date}
                 </Typography>
+                <OwnerActions isOwner={isOwner} onEdit={() => setEditData({ title, content: text, rating })} onDelete={handleDelete} />
             </Box>
 
-            {/* Rating */}
-            <Rating value={rating} readOnly size="small" sx={{ color: "#c8a951", mb: 1 }} />
-
-            {/* Title */}
-            <Typography sx={{ fontSize: 15, fontWeight: 600, mb: 1 }}>
-                {title}
-            </Typography>
-
-            {/* Review Text */}
-            <Typography sx={{ fontSize: 14, color: "#666", mb: 1.5, lineHeight: 1.5 }}>
-                {text}
-            </Typography>
+            {editData  ? (
+                <Box sx={{ mb: 1.5 }}>
+                    <Rating value={editData.rating} onChange={(_, val) => setEditData({ ...editData, rating: val || 1 })} size="small" sx={{ color: "#c8a951", mb: 1 }} />
+                    <TextField fullWidth size="small" label="Title" value={editData.title} onChange={(e) => setEditData({ ...editData, title: e.target.value })} sx={{ mb: 1 }} />
+                    <TextField fullWidth size="small" label="Content" multiline rows={3} value={editData.content} onChange={(e) => setEditData({ ...editData, content: e.target.value })} sx={{ mb: 1 }} />
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                        <Button size="small" onClick={handleEdit} variant="contained" sx={{ bgcolor: "#c8a951", fontSize: 12 }}>Save</Button>
+                        <Button size="small" onClick={() => setEditData(null)} sx={{ fontSize: 12 }}>Cancel</Button>
+                    </Box>
+                </Box>
+            ) : (
+                <>
+                    <Typography sx={{ fontSize: 15, fontWeight: 600, mb: 1 }}>
+                        {title}
+                    </Typography>
+                    <Typography sx={{ fontSize: 14, color: "#666", mb: 1.5, lineHeight: 1.5 }}>
+                        {text}
+                    </Typography>
+                </>
+            )}
 
             {/* Images */}
             {images.length > 0 && (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import apiClient from "../services/api-client";
 import type { ProductFromServer } from "../services/products-api";
+import { getImageUrl } from "../utils/format";
 
 const colorMap: Record<string, string> = {
     black: "#000000",
@@ -112,7 +113,7 @@ const useProductDetail = (productId: string | undefined) => {
                     rating: 0,
                     reviewCount: 0,
                     images: p.images.map((img) => ({
-                        src: `${apiClient.defaults.baseURL}${img}`,
+                        src: getImageUrl(img),
                         alt: p.name,
                     })),
                     colors: p.colors.map((color) => ({

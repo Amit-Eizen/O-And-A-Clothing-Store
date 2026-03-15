@@ -53,7 +53,7 @@ router.get("/", reviewsController.getAll.bind(reviewsController));
  *       500:
  *         description: Server error
  */
-router.get("/paging", reviewsController.getwithPaging.bind(reviewsController));
+router.get("/paging", reviewsController.getWithPaging.bind(reviewsController));
 
 /**
  * @swagger

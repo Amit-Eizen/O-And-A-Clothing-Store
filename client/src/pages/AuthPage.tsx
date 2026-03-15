@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import authImage from "../assets/auth-image.jpg"; 
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
+import { getImageUrl } from "../utils/format";
+
+const authImage = getImageUrl("/public/images/hero/auth-image.jpg");
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);

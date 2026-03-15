@@ -3,13 +3,14 @@ import jwt from 'jsonwebtoken';
 import user from '../models/userModel';
 import { OAuth2Client } from 'google-auth-library';
 
-
 type GeneratedTokens = {
     token: string;
     refreshToken: string;
+    userId: string;
+    username: string;
 };
 
-const generateTokens = (userId: string): GeneratedTokens => {
+const generateTokens = (userId: string): { token: string; refreshToken: string } => {
     const secret = process.env.JWT_SECRET!;
     const expiresIn = parseInt(process.env.JWT_EXPIRES_IN!);
     const token = jwt.sign(
@@ -49,7 +50,7 @@ const register = async (username: string, email: string, password: string, addre
         const tokens = generateTokens(newUser._id.toString());
         newUser.refreshToken.push(tokens.refreshToken);
         await newUser.save();
-        return tokens;
+        return { ...tokens, userId: newUser._id.toString(), username };
     }
     catch (error) {
         throw new Error('Error registering user: ' + error);
@@ -70,7 +71,7 @@ const login = async (email: string, password: string): Promise<GeneratedTokens> 
         const tokens = generateTokens(existingUser._id.toString());
         existingUser.refreshToken.push(tokens.refreshToken);
         await existingUser.save();
-        return tokens;
+        return { ...tokens, userId: existingUser._id.toString(), username: existingUser.username };
     }
     catch (error) {
         throw new Error('Error logging in: ' + error);
@@ -128,7 +129,7 @@ const refreshToken = async (oldRefreshToken: string): Promise<GeneratedTokens> =
         );
         existingUser.refreshToken.push(tokens.refreshToken);
         await existingUser.save();
-        return tokens;
+        return { ...tokens, userId: existingUser._id.toString(), username: existingUser.username };
     }
     catch (error) {
         throw new Error('Error refreshing token: ' + error);
@@ -159,7 +160,7 @@ const googleSignIn = async (credential: string): Promise<GeneratedTokens> => {
         const tokens = generateTokens(existingUser._id.toString());
         existingUser.refreshToken.push(tokens.refreshToken);
         await existingUser.save();
-        return tokens;
+        return { ...tokens, userId: existingUser._id.toString(), username: existingUser.username };
     }
     catch (error) {
         throw new Error('Error with Google sign in: ' + error);

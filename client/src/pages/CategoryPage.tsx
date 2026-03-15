@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Box, Typography, Grid, Button, CircularProgress } from "@mui/material";
+import { Box, Typography, Grid, Button, CircularProgress, Snackbar } from "@mui/material";
 import TuneIcon from "@mui/icons-material/Tune";
 import ProductCard from "../components/products/ProductCard";
 import FiltersDialog from "../components/products/FiltersDialog";
 import { getProductTags } from "../services/products-api";
-import apiClient from "../services/api-client";
 import useCategoryFilters from "../hooks/useCategoryFilters";
 import useCategoryProducts from "../hooks/useCategoryProducts";
+import useWishlist from "../hooks/useWishlist";
+import { getImageUrl } from "../utils/format";
 
 const categoryConfig: Record<string, { title: string; subtitle: string }> = {
     women: { title: "Women's Collection", subtitle: "Timeless pieces designed for the modern woman" },
@@ -22,6 +23,7 @@ const CategoryPage = () => {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const { currentFilters, updateFilters } = useCategoryFilters(category || "");
     const { products, totalProducts, loading, sentinelRef } = useCategoryProducts(category || "", currentFilters);
+    const { isInWishlist, toggleWishlist, snackMessage, closeSnack } = useWishlist();
 
     return (
         <Box sx={{ minHeight: "80vh" }}>
@@ -89,9 +91,11 @@ const CategoryPage = () => {
                                 type={product.type}
                                 price={product.salePrice || product.price}
                                 oldPrice={product.salePrice ? product.price : undefined}
-                                image={`${apiClient.defaults.baseURL}${product.images[0]}`}
+                                image={getImageUrl(product.images[0])}
                                 tags={getProductTags(product)}
-                                category={product.category}    
+                                category={product.category}  
+                                isInWishlist={isInWishlist(product._id)}
+                                onWishlistToggle={() => toggleWishlist(product._id)}  
                             />
                         </Grid>
                     ))}
@@ -138,6 +142,12 @@ const CategoryPage = () => {
                     </Box>
                 )}
             </Box>
+            <Snackbar
+                open={snackMessage !== ""}
+                autoHideDuration={3000}
+                onClose={closeSnack}
+                message={snackMessage}
+            />
         </Box>
     );
 };

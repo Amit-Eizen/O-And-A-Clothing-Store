@@ -9,7 +9,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { logoutUser } from "../../services/auth-service";
-import apiClient from "../../services/api-client";
+import { getImageUrl } from "../../utils/format";
 
 const AccountSidebarItems = [
     { key: "orders", label: "Order History", icon: <ShoppingBagOutlinedIcon /> },
@@ -35,7 +35,7 @@ const AccountSidebar = ({ activeSection, onSectionChange, username, email, profi
         navigate("/");
     };
 
-    const avatarSrc = profileImage ? `${apiClient.defaults.baseURL}${profileImage}` : "";
+    const avatarSrc = profileImage ? getImageUrl(profileImage) : "";
     const [imageOpen, setImageOpen] = useState(false);
 
     return (

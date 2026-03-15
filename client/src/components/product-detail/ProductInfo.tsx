@@ -1,5 +1,6 @@
 import { Box, Typography, Rating, Chip, Button, Divider } from "@mui/material";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import ColorSelector from "./ColorSelector";
 import SizeSelector from "./SizeSelector";
 import QuantitySelector from "./QuantitySelector";
@@ -26,6 +27,8 @@ interface ProductInfoProps {
     onDecrement: () => void;
     savings: number;
     onAddToCart: () => void;
+    isInWishlist: boolean;
+    onWishlistToggle: () => void;
 }
 
 const ProductInfo = ({
@@ -39,6 +42,8 @@ const ProductInfo = ({
     onDecrement,
     savings,
     onAddToCart,
+    isInWishlist,
+    onWishlistToggle
 }: ProductInfoProps) => {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -148,20 +153,21 @@ const ProductInfo = ({
             <Button
                 variant="outlined"
                 fullWidth
-                startIcon={<FavoriteBorderOutlinedIcon />}
+                startIcon={isInWishlist ? <FavoriteIcon /> : <FavoriteBorderOutlinedIcon />}
+                onClick={onWishlistToggle}
                 sx={{
-                    borderColor: "#c8a951",
-                    color: "#c8a951",
+                    borderColor: isInWishlist ? "#e53935" : "#c8a951",
+                    color: isInWishlist ? "#e53935" : "#c8a951",
                     py: 1.2,
                     fontSize: 13,
                     letterSpacing: 1,
                     "&:hover": {
-                        borderColor: "#b8993e",
-                        backgroundColor: "rgba(200, 169, 81, 0.04)",
+                        borderColor: isInWishlist ? "#c62828" : "#b8993e",
+                        backgroundColor: isInWishlist ? "rgba(229, 57, 53, 0.04)" : "rgba(200, 169, 81, 0.04)",
                     },
                 }}
             >
-                Add to Wishlist
+                {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
             </Button>
 
             <Divider />

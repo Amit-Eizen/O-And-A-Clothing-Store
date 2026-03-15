@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Box, Typography, TextField, Button, Avatar, Grid } from "@mui/material";
 import apiClient from "../../services/api-client";
+import { getImageUrl } from "../../utils/format";
 
 interface UserProfile {
     _id: string;
@@ -90,7 +91,7 @@ const AccountSettingsSection = ({ onProfileUpdate }: { onProfileUpdate: () => vo
 
     if (loading) return <Typography>Loading...</Typography>;
 
-    const avatarSrc = previewUrl || (user?.profileImage ? `${apiClient.defaults.baseURL}${user.profileImage}` : "");
+    const avatarSrc = previewUrl || (user?.profileImage ? getImageUrl(user.profileImage) : "");
 
     return (
         <Box>

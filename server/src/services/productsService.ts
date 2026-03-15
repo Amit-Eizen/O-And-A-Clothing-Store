@@ -66,6 +66,7 @@ class ProductsService extends BaseService {
         if (sort === "price-low") return { price: 1, _id: 1 };
         if (sort === "price-high") return { price: -1, _id: 1 };
         if (sort === "most-popular") return { soldCount: -1, _id: 1 };
+        if (sort === "newest") return { createdAt: -1, _id: 1 };
         return {  _id: 1 };
     }
 
@@ -81,6 +82,25 @@ class ProductsService extends BaseService {
         const products = await this.model.find(filter).sort(sortObj).skip(skip).limit(limit);
 
         return { products, total, page, limit };
+    }
+
+    async getNewArrivals(limit: number = 4) {
+        const featured = await this.model
+            .find({ isFeaturedNewArrival: true })
+            .sort({ createdAt: -1 })
+            .limit(limit);
+        
+        if (featured.length >= limit) {
+            return featured;
+        }
+    
+        const featuredIds = featured.map((p) => p._id);
+        const remaining = await this.model
+            .find({ _id: { $nin: featuredIds } })
+            .sort({ createdAt: -1 })
+            .limit(limit - featured.length);
+    
+        return [...featured, ...remaining];
     }
 }
 

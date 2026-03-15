@@ -66,6 +66,16 @@ class ProductsController extends BaseController {
             res.status(500).json({ error: "Error filtering products" });
         }
     }
+
+    async getNewArrivals(req: Request, res: Response): Promise<void> {
+        try {
+            const limit = Number(req.query.limit) || 4;
+            const products = await productsService.getNewArrivals(limit);
+            res.status(200).json(products);
+        } catch (error) {
+            res.status(500).json({ error: "Failed to fetch new arrivals" });
+        }
+    }
 }   
 
 export default new ProductsController();

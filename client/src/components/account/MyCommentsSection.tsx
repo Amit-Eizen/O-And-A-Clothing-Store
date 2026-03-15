@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, Rating, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Box, Typography, Rating, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from "@mui/material";
 import apiClient from "../../services/api-client";
+import OwnerActions from "../reviews/OwnerActions";
+import { useNavigate } from "react-router-dom";
+import { formatDate, getImageUrl } from "../../utils/format";
 
 interface Comment {
     _id: string;
@@ -26,6 +27,7 @@ interface Comment {
 }
 
 const MyCommentsSection = () => {
+    const navigate = useNavigate();
     const [comments, setComments] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(true);
     const [editComment, setEditComment] = useState<Comment | null>(null);
@@ -33,13 +35,13 @@ const MyCommentsSection = () => {
 
     useEffect(() => {
         apiClient.get("/comments/user")
-            .then((res) => setComments(res.data))
+            .then((res) => setComments(res.data.filter((c: Comment) => c.reviewId !== null)))
             .catch((err) => console.error("Failed to fetch comments:", err))
             .finally(() => setLoading(false));
     }, []);
 
     const handleDelete = async (commentId: string) => {
-        const ok = confirm("Are you sure you want to delete this comment?");
+        const ok = window.confirm("Are you sure you want to delete this comment?");
         if (!ok) return;
 
         try {
@@ -93,11 +95,11 @@ const MyCommentsSection = () => {
                     {/* Review Banner */}
                     <Box
                         sx={{ display: "flex", alignItems: "center", gap: 2, backgroundColor: "#faf9f6", px: 3, py: 2, cursor: "pointer" }}
-                        onClick={() => window.location.href = `/${comment.reviewId.productId.category}/${comment.reviewId.productId._id}`}
+                        onClick={() => navigate(`/${comment.reviewId.productId.category}/${comment.reviewId.productId._id}/reviews`)}
                     >
                         <Box
                             component="img"
-                            src={`${apiClient.defaults.baseURL}${comment.reviewId.productId.images?.[0]}`}
+                            src={getImageUrl(comment.reviewId.productId.images?.[0] || "")}
                             sx={{ width: 60, height: 60, objectFit: "cover", borderRadius: 1 }}
                         />
                         <Box sx={{ flex: 1 }}>
@@ -112,20 +114,16 @@ const MyCommentsSection = () => {
                                 "{comment.reviewId.title}"
                             </Typography>
                         </Box>
-                        <Box>
-                            <IconButton size="small" onClick={(e) => { e.stopPropagation(); openEdit(comment); }}>
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleDelete(comment._id); }}>
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
+                        <OwnerActions isOwner={true} 
+                            onEdit={() => openEdit(comment)} 
+                            onDelete={() => handleDelete(comment._id)} 
+                        />
                     </Box>
 
                     {/* Comment Content */}
                     <Box sx={{ px: 3, py: 2 }}>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                            {new Date(comment.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                            {formatDate(comment.createdAt)}
                         </Typography>
                         <Typography>{comment.content}</Typography>
                     </Box>

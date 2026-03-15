@@ -1,7 +1,9 @@
 import { Box, Typography, Button } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { Link } from "react-router-dom";
-import heroImage from "../../assets/hero-image.jpg";
+import { getImageUrl } from "../../utils/format";
+
+const heroImage = getImageUrl("/public/images/hero/hero-image.jpg");
 
 const HeroSection = () => {
     return (
