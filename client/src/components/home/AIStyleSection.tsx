@@ -7,6 +7,7 @@ interface AIStyleSectionProps {
     query: string;
     onQueryChange: (query: string) => void;
     onSearch: (query: string) => void;
+    onClear: () => void;
     isLoading: boolean;
     hasSearched: boolean;
 }
@@ -19,7 +20,7 @@ const suggestions = [
     "Date night outfit ideas",
 ];
 
-const AIStyleSection = ({ query, onQueryChange, onSearch, isLoading, hasSearched }: AIStyleSectionProps) => {
+const AIStyleSection = ({ query, onQueryChange, onSearch, onClear, isLoading, hasSearched }: AIStyleSectionProps) => {
     const handleEnterPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
         onSearch(query);
@@ -90,7 +91,7 @@ return (
                         sx={{ fontSize: 14, py: 1 }}
                     />
                     <Button
-                    onClick={() => onSearch(query)}
+                        onClick={() => onSearch(query)}
                         disabled={isLoading}
                         sx={{
                             backgroundColor: "#c8a951",
@@ -108,6 +109,22 @@ return (
                         {isLoading ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Search"}
                     </Button>
                 </Box>
+
+                {/* Clear / New Search */}
+                {hasSearched && !isLoading && (
+                    <Button
+                        onClick={onClear}
+                        sx={{
+                            mt: 2,
+                            color: "#999",
+                            textTransform: "none",
+                            fontSize: 13,
+                            "&:hover": { color: "#c8a951" },
+                        }}
+                    >
+                        Clear results
+                    </Button>
+                )}
 
                 {/* Suggestions + How It Works — hidden after search */}
                 {!hasSearched && (

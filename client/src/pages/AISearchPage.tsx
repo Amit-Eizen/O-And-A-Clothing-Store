@@ -11,6 +11,7 @@ const AISearchPage = () => {
                 query={query}
                 onQueryChange={setQuery}
                 onSearch={search}
+                onClear={clearResults}
                 isLoading={isLoading}
                 hasSearched={hasSearched}
             />

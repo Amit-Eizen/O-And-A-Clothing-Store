@@ -15,26 +15,65 @@ interface SearchFilters {
 class SearchService {
     private buildPrompt(userQuery: string): string {
         return `You are a search assistant for a clothing store called O&A.
-        The user is searching for products. Extract search filters from their query.
+        Extract search filters from the user's query. Be creative — infer what types of clothing fit the occasion.
 
-        Available types: shirts, pants, shoes, jackets, dresses, accessories, t-shirts
+        Available product types: Dresses, Sets, Blouses, Skirts, Pants, Jeans, Coats, Blazers, Jackets, Polo Shirts, T-Shirts, Sweaters, Hoodies, Sweatshirts, Sunglasses, Scarves, Bags, Jewelry, Shoes, Wallets, Hats
         Available categories: men, women, accessories
         Available sizes: XS, S, M, L, XL, XXL
 
         Return ONLY a valid JSON object with these optional fields:
-        - "type": string (one of the available types)
+        - "type": string (one of the available types, pick the most relevant one)
         - "category": string (men, women, or accessories)
         - "color": string (a color)
         - "size": string (one of the available sizes)
         - "minPrice": number
         - "maxPrice": number
-        - "tags": string[] (relevant tags like: cotton, casual, summer, formal, winter, sport)
-        - "query": string (general search term if no specific filters match)
+        - "tags": string[] (relevant tags like: cotton, casual, summer, formal, winter, sport, elegant, evening, date)
+        - "query": string (a SHORT 1-2 word search term to match product names/descriptions — NOT the full user query)
 
-        Only include fields that are clearly mentioned or implied in the query.
-        If the query is not related to clothing, return: {"query": ""}
+        IMPORTANT RULES:
+        - Try to extract specific filters (type, category, tags) rather than relying on "query"
+        - For occasion-based queries like "date night" or "summer vacation", use tags and/or type
+        - "query" should only be a short keyword, never the full user sentence
+        - Only include fields that are relevant
+        - If the query is not related to clothing/fashion, return: {"query": ""}
 
         User query: "${userQuery}"`;
+    }
+
+    private buildMongoFilter(filters: SearchFilters): any {
+        const mongoFilter: any = {};
+
+        if (filters.type) {
+            mongoFilter.type = { $regex: filters.type, $options: "i" };
+        }
+        if (filters.category) {
+            mongoFilter.category = filters.category.toLowerCase();
+        }
+        if (filters.color) {
+            mongoFilter.colors = { $regex: filters.color, $options: "i" };
+        }
+        if (filters.size) {
+            mongoFilter.sizes = { $regex: `^${filters.size}$`, $options: "i" };
+        }
+        if (filters.minPrice || filters.maxPrice) {
+            mongoFilter.price = {};
+            if (filters.minPrice) mongoFilter.price.$gte = filters.minPrice;
+            if (filters.maxPrice) mongoFilter.price.$lte = filters.maxPrice;
+        }
+        if (filters.tags && filters.tags.length > 0) {
+            mongoFilter.tags = { $in: filters.tags.map(t => new RegExp(t, "i")) };
+        }
+        if (filters.query) {
+            const words = filters.query.trim().split(/\s+/);
+            const pattern = words.join("|");
+            mongoFilter.$or = [
+                { name: { $regex: pattern, $options: "i" } },
+                { description: { $regex: pattern, $options: "i" } },
+            ];
+        }
+
+        return mongoFilter;
     }
 
     async smartSearch(userQuery: string): Promise<any[]> {
@@ -52,36 +91,34 @@ class SearchService {
             return [];
         }
 
-        const mongoFilter: any = {};
+        const mongoFilter = this.buildMongoFilter(filters);
+        let products = await productsService.getAll(mongoFilter);
 
-        if (filters.type) {
-            mongoFilter.type = filters.type;
-        }
-        if (filters.category) {
-            mongoFilter.category = filters.category;
-        }
-        if (filters.color) {
-            mongoFilter.colors = { $regex: filters.color, $options: "i" };
-        }
-        if (filters.size) {
-            mongoFilter.sizes = filters.size;
-        }
-        if (filters.minPrice || filters.maxPrice) {
-            mongoFilter.price = {};
-            if (filters.minPrice) mongoFilter.price.$gte = filters.minPrice;
-            if (filters.maxPrice) mongoFilter.price.$lte = filters.maxPrice;
-        }
-        if (filters.tags && filters.tags.length > 0) {
-            mongoFilter.tags = { $in: filters.tags.map(t => new RegExp(t, "i")) };
-        }
-        if (filters.query) {
-            mongoFilter.$or = [
-                { name: { $regex: filters.query, $options: "i" } },
-                { description: { $regex: filters.query, $options: "i" } },
-            ];
+        // If strict filter returns 0, try without tags
+        if (products.length === 0 && filters.tags && filters.tags.length > 0) {
+            const relaxed = { ...filters };
+            delete relaxed.tags;
+            const relaxedFilter = this.buildMongoFilter(relaxed);
+            products = await productsService.getAll(relaxedFilter);
         }
 
-        const products = await productsService.getAll(mongoFilter);
+        // If still 0, try with just query in name/description (broadest search)
+        if (products.length === 0 && filters.query) {
+            const words = filters.query.trim().split(/\s+/);
+            const pattern = words.join("|");
+            const broadFilter: any = {
+                $or: [
+                    { name: { $regex: pattern, $options: "i" } },
+                    { description: { $regex: pattern, $options: "i" } },
+                    { tags: { $in: words.map(w => new RegExp(w, "i")) } },
+                ],
+            };
+            if (filters.category) {
+                broadFilter.category = filters.category.toLowerCase();
+            }
+            products = await productsService.getAll(broadFilter);
+        }
+
         return products;
     }
 }
