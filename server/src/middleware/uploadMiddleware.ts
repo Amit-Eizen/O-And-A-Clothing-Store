@@ -58,4 +58,27 @@ export const uploadReviewImages = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB per file
 }).array("images", 5);
 
+// Single file upload for media library (admin)
+const mediaStorage = multer.diskStorage({
+    destination: (req: any, _file, cb) => {
+        const category = req.body.category || "Uncategorized";
+        const dir = path.join(__dirname, "../../public/images/products", category);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: (_req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const name = file.originalname.replace(ext, "").replace(/\s+/g, "-").toLowerCase();
+        cb(null, name + ext);
+    }
+});
+
+export const uploadMediaImages = multer({
+    storage: mediaStorage,
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 }
+}).array("images", 10);
+
 export const UPLOADS_PATH = "/public/uploads";

@@ -1116,12 +1116,13 @@ const products = [
 
 // ==================== SEED USERS ====================
 
-const seedUsers = [
+const seedUsers: { username: string; email: string; password: string; profileImage: string; role?: string }[] = [
   { username: "Sarah Miller", email: "sarah@example.com", password: "Password123!", profileImage: "" },
   { username: "James Wilson", email: "james@example.com", password: "Password123!", profileImage: "" },
   { username: "Emily Chen", email: "emily@example.com", password: "Password123!", profileImage: "" },
   { username: "David Brown", email: "david@example.com", password: "Password123!", profileImage: "" },
   { username: "Rachel Kim", email: "rachel@example.com", password: "Password123!", profileImage: "" },
+  { username: "Admin", email: "admin@oa-store.com", password: "Admin123!", profileImage: "", role: "admin" },
 ];
 
 // ==================== REVIEW TEMPLATES ====================
@@ -1232,9 +1233,10 @@ async function seed() {
     console.log("Cleared all collections");
 
     // Insert products
-    const productsWithSales = products.map((p) => ({
+    const productsWithSales = products.map((p, index) => ({
       ...p,
       soldCount: Math.floor(Math.random() * 200),
+      isFeaturedNewArrival: index < 4,
     }));
     const insertedProducts = await Product.insertMany(productsWithSales);
     console.log(`Inserted ${insertedProducts.length} products`);
@@ -1244,6 +1246,7 @@ async function seed() {
       seedUsers.map(async (u) => ({
         ...u,
         password: await bcrypt.hash(u.password, 10),
+        ...(u.role ? { role: u.role } : {}),
       }))
     );
     const insertedUsers = await User.insertMany(usersWithHash);

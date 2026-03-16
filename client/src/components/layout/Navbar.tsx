@@ -1,10 +1,12 @@
-import { AppBar, Toolbar, Box, Typography, IconButton, Badge } from "@mui/material";
+import { AppBar, Toolbar, Box, Typography, IconButton, Badge, Button } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import PersonOutLineIcon from "@mui/icons-material/PersonOutline";
 import ShoppingBagOutLinedIcon from "@mui/icons-material/ShoppingBagOutlined";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link } from "react-router-dom";
 import useCart from "../../hooks/useCart";
+import { isAdmin } from "../../utils/adminAuth";
 
 const navLinks = [
     { label: "Women", path: "/women" },
@@ -50,24 +52,37 @@ const Navbar = () => {
                 </Box>
 
                 {/* Action Icons */}
-                <Box sx={{ display: "flex", gap: 1 }}>
-                    <IconButton size="small" component={Link} to="/search">
-                        <SearchIcon sx={{ fontSize: 20 }}/>
-                    </IconButton>
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                    {isAdmin() ? (
+                        <Button
+                            component={Link}
+                            to="/admin"
+                            startIcon={<ArrowBackIcon />}
+                            sx={{ textTransform: "none", color: "#000", fontWeight: 500, "&:hover": { color: "#c8a951" } }}
+                        >
+                            Back to Admin Dashboard
+                        </Button>
+                    ) : (
+                        <>
+                            <IconButton size="small" component={Link} to="/search">
+                                <SearchIcon sx={{ fontSize: 20 }}/>
+                            </IconButton>
 
-                    <IconButton size="small" component={Link} to="/account?section=wishlist">
-                        <FavoriteBorderIcon sx={{ fontSize: 20 }} />
-                    </IconButton>
+                            <IconButton size="small" component={Link} to="/account?section=wishlist">
+                                <FavoriteBorderIcon sx={{ fontSize: 20 }} />
+                            </IconButton>
 
-                    <IconButton size="small" component={Link} to="/account">
-                        <PersonOutLineIcon sx={{ fontSize: 20 }} />
-                    </IconButton>
+                            <IconButton size="small" component={Link} to="/account">
+                                <PersonOutLineIcon sx={{ fontSize: 20 }} />
+                            </IconButton>
 
-                    <IconButton size="small" component={Link} to="/cart">
-                        <Badge badgeContent={itemCount} color="primary" sx={{ "& .MuiBadge-badge": { backgroundColor: "#c8a951", fontSize: 11, minWidth: 16, height: 18 } }}>
-                            <ShoppingBagOutLinedIcon sx={{ fontSize: 20 }} />
-                        </Badge>
-                    </IconButton>
+                            <IconButton size="small" component={Link} to="/cart">
+                                <Badge badgeContent={itemCount} color="primary" sx={{ "& .MuiBadge-badge": { backgroundColor: "#c8a951", fontSize: 11, minWidth: 16, height: 18 } }}>
+                                    <ShoppingBagOutLinedIcon sx={{ fontSize: 20 }} />
+                                </Badge>
+                            </IconButton>
+                        </>
+                    )}
                 </Box>
             </Toolbar>
         </AppBar>

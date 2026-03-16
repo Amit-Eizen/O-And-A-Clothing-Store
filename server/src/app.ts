@@ -12,6 +12,7 @@ import ordersRoute from "./routes/ordersRoute";
 import commentsRoute from "./routes/commentsRoute";
 import userRoute from "./routes/userRoute";
 import wishlistRoute from "./routes/wishlistRoute";
+import adminRoute from "./routes/adminRoute";
 
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.dev" });
@@ -37,6 +38,7 @@ app.use("/orders", ordersRoute);
 app.use("/comments", commentsRoute);
 app.use("/users", userRoute);
 app.use("/wishlist", wishlistRoute);
+app.use("/admin", adminRoute);
 
 // Swagger JSON endpoint
 app.get('/api-docs.json', (req, res) => {
