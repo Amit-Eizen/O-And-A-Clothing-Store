@@ -28,7 +28,7 @@ const orderSchema = new Schema<IOrder>(
     {
         userId: {
             type: Schema.Types.ObjectId,
-            ref: "User",
+            ref: "user",
             required: true,
         },
 

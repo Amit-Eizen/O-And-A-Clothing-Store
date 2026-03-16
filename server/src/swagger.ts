@@ -33,6 +33,7 @@ const options: swaggerJsdoc.Options = {
             { name: 'Orders', description: 'Order management' },
             { name: 'Comments', description: 'Product comments' },
             { name: 'Users', description: 'User profile management' },
+            { name: 'Admin', description: 'Admin dashboard and management' },
         ],
     },
     apis: ['./src/routes/*.ts'],

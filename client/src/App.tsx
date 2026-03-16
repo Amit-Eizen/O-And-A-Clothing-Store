@@ -10,6 +10,7 @@ import ReviewsPage from "./pages/ReviewsPage";
 import AISearchPage from "./pages/AISearchPage";
 import ScrollToTop from "./components/layout/ScrollToTop";
 import MyAccountPage from "./pages/MyAccountPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="*" element={
           <>
             <Navbar />

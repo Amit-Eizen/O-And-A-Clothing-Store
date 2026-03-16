@@ -14,11 +14,12 @@ export interface IUser {
     };
 }
 
-export const saveTokenInLocalStorage = (data: { token: string; refreshToken: string; userId: string; username: string }) => {
+export const saveTokenInLocalStorage = (data: { token: string; refreshToken: string; userId: string; username: string; role: string }) => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("refreshToken", data.refreshToken);
     localStorage.setItem("userId", data.userId);
     localStorage.setItem("username", data.username);
+    localStorage.setItem("role", data.role);
 }
 
 export const clearAuthData = () => {
@@ -26,6 +27,7 @@ export const clearAuthData = () => {
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
     localStorage.removeItem("username");
+    localStorage.removeItem("role");
 };
 
 export const loginUser = async (email: string, password: string) => {

@@ -16,6 +16,7 @@ export interface ProductFromServer {
     tags: string[];
     features: string[];
     createdAt: string;
+    isFeaturedNewArrival: boolean;
 }
 
 interface FilterProductsResponse {
@@ -72,9 +73,8 @@ export const fetchFilteredProducts = async (params: FilterProductsParams): Promi
 export function getProductTags(product: ProductFromServer): string[] {
     const tags: string[] = [];
 
-    const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-    if( new Date(product.createdAt) > twoWeeksAgo) {
+    const hasNewTag = product.tags.some((t) => t.toLowerCase() === "new");
+    if (hasNewTag) {
         tags.push("NEW");
     }
 

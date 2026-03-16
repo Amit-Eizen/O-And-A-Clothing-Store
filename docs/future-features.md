@@ -75,3 +75,14 @@
 - Server: `hasPurchased` check in reviewsController — verifies user has an order with status processing/shipped/delivered containing the productId
 - Client: "Write a Review" button shown conditionally based on purchase history
 - Returns 403 if user hasn't purchased the product
+
+## Admin Dashboard (COMPLETED — branch: feature/admin-dashboard)
+- Full admin dashboard with product, order, user management and site settings
+- Server: adminService + adminController + adminRoute (all behind `authenticate + authorizeAdmin`)
+- Dashboard stats, paginated tables, low stock alerts, media library with upload
+- Product management: CRUD, NEW tag toggle (manual via tags array), image management
+- Order management: status filters, status update dropdown
+- Settings: banner replacement + New Arrivals homepage control (replace/remove pattern)
+- Auth role plumbing: login/register returns `role`, saved in localStorage, `isAdmin()` helper
+- Seed script adds admin user (`admin@oa-store.com` / `Admin123!`)
+- See [admin-dashboard.md](admin-dashboard.md) for full details

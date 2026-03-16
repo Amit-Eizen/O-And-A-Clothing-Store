@@ -2,7 +2,7 @@
 
 ## About
 
-E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, product reviews with comments (connected to DB with likes and real-time comment posting), shopping cart (guest + logged-in with merge on login), checkout with order creation, and user account management (profile, order history, wishlist).
+E-commerce clothing store with React frontend and Node.js backend. Features authentication (JWT + Google OAuth), product catalog with AI-powered search, product reviews with comments (connected to DB with likes and real-time comment posting), shopping cart (guest + logged-in with merge on login), checkout with order creation, user account management (profile, order history, wishlist), and admin dashboard (product/order/user management, site settings).
 
 ## Project Structure
 
@@ -50,6 +50,7 @@ O-And-A-Clothing-Store/
     ├── project-overview.md     # This file
     ├── client-architecture.md  # Frontend details
     ├── server-architecture.md  # Backend details
+    ├── admin-dashboard.md      # Admin dashboard details
     └── troubleshooting.md      # Problems & solutions
 ```
 
@@ -114,4 +115,5 @@ Both need to run simultaneously (two terminals).
 
 - **[Client Architecture](client-architecture.md)** - Frontend components, routing, styling, auth flow
 - **[Server Architecture](server-architecture.md)** - Backend models, services, controllers, middleware, LLM search, cart & order flow
+- **[Admin Dashboard](admin-dashboard.md)** - Admin dashboard architecture, endpoints, and key concepts
 - **[Troubleshooting](troubleshooting.md)** - Common problems and their solutions
