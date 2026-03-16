@@ -1,6 +1,8 @@
 import { Box, Typography, Grid, Button, CircularProgress, Divider } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ProductCard from "../products/ProductCard";
+import { getImageUrl } from "../../utils/format";
+import { getProductTags } from "../../services/products-api";
 
 interface SearchResultsProps {
     results: any[];
@@ -45,15 +47,15 @@ const SearchResults = ({ results, isLoading, query, onClear, error }: SearchResu
             {!isLoading && !error && results.length > 0 && (
                 <Grid container spacing={3}>
                     {results.map((product) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={product.id}>
-                            <ProductCard 
-                                id={product.id}
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={product._id}>
+                            <ProductCard
+                                id={product._id}
                                 name={product.name}
                                 type={product.type}
                                 price={product.price}
                                 oldPrice={product.salePrice}
-                                image={product.images?.[0] || ""}
-                                tags={product.tags || []}
+                                image={getImageUrl(product.images?.[0] || "")}
+                                tags={getProductTags(product)}
                                 category={product.category}
                             />
                         </Grid>

@@ -10,8 +10,10 @@ class LLMService {
                 model: "gemini-2.5-flash",
                 generationConfig: {
                     temperature: 0.1,
-                    maxOutputTokens: 500,
+                    maxOutputTokens: 2048,
                     responseMimeType: "application/json",
+                    // @ts-ignore - thinkingConfig supported by Gemini 2.5
+                    thinkingConfig: { thinkingBudget: 0 },
                 }
             });
         }
