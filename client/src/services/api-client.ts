@@ -4,7 +4,7 @@ import { clearAuthData, saveTokenInLocalStorage } from "./auth-service";
 export { CanceledError };
 
 const apiClient = axios.create({
-    baseURL: "http://localhost:3000",
+    baseURL: import.meta.env.VITE_API_URL,
 });
 
 apiClient.interceptors.request.use((config) => {
