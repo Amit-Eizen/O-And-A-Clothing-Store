@@ -15,11 +15,16 @@ import wishlistRoute from "./routes/wishlistRoute";
 import adminRoute from "./routes/adminRoute";
 
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.dev" });
+const envFile = process.env.NODE_ENV === "production" ? ".env.prod" : ".env.dev";
+dotenv.config({ path: envFile });
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: process.env.NODE_ENV === "production"
+        ? "https://node67.cs.colman.ac.il"
+        : "*"
+}));
 app.use("/public", express.static(path.join(__dirname, "../public")));
 
 // Swagger UI setup
