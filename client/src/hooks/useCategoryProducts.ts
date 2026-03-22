@@ -17,17 +17,27 @@ const useCategoryProducts = (category: string, filters: CategoryFilters) => {
 
     const buildFilterParams = useCallback((pageNumber: number) => {
         const params: any = {
-            category: category,
             sort: filters.sortBy,
             page: pageNumber,
             limit: PRODUCTS_PER_PAGE,
         };
+
+        if (category === "sale") {
+        params.onSale = true;
+        } else if (category === "new-arrivals") {
+            params.newArrivals = true;
+        } else {
+            params.category = category;
+        }
 
         if (filters.selectedTypes.length > 0) params.type = filters.selectedTypes;
         if (filters.priceRange[0] > 0) params.minPrice = filters.priceRange[0];
         if (filters.priceRange[1] < 1000) params.maxPrice = filters.priceRange[1];
         if (filters.selectedSizes.length > 0) params.sizes = filters.selectedSizes;
         if (filters.selectedColors.length > 0) params.colors = filters.selectedColors;
+        if (filters.selectedCategories && filters.selectedCategories.length > 0) {
+            params.filterByCategories = filters.selectedCategories.join(",");
+        }
 
         return params;
     }, [category, filters]);

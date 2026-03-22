@@ -4,7 +4,7 @@ import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
 const badges = [
-    { icon: <LocalShippingOutlinedIcon />, label: "Free Shipping", sublabel: "Over $200" },
+    { icon: <LocalShippingOutlinedIcon />, label: "Free Shipping", sublabel: "Over $149" },
     { icon: <ReplayOutlinedIcon />, label: "30-Day Returns", sublabel: "Easy & Free" },
     { icon: <LockOutlinedIcon />, label: "Secure Checkout", sublabel: "SSL Encrypted" },
 ];

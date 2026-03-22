@@ -45,6 +45,9 @@ class ProductsController extends BaseController {
                 { name: "maxPrice",  type: "number" },
                 { name: "page",      type: "number" },
                 { name: "limit",     type: "number" },
+                { name: "onSale",      type: "boolean" },
+                { name: "newArrivals",  type: "boolean" },
+                { name: "filterByCategories",   type: "string" },
             ];
 
             for (const rule of paramRules) {
@@ -57,6 +60,8 @@ class ProductsController extends BaseController {
                     params[rule.name] = (value as string).split(",");
                 } else if (rule.type === "number") {
                     params[rule.name] = Number(value);
+                } else if (rule.type === "boolean") {
+                    params[rule.name] = value === "true";
                 }
             }
 

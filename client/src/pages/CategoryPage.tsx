@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { Box, Typography, Grid, Button, CircularProgress, Snackbar } from "@mui/material";
 import TuneIcon from "@mui/icons-material/Tune";
 import ProductCard from "../components/products/ProductCard";
@@ -11,13 +11,17 @@ import useWishlist from "../hooks/useWishlist";
 import { getImageUrl } from "../utils/format";
 
 const categoryConfig: Record<string, { title: string; subtitle: string }> = {
-    women: { title: "Women's Collection", subtitle: "Timeless pieces designed for the modern woman" },
-    men: { title: "Men's Collection", subtitle: "Modern essentials for the contemporary man" },
-    accessories: { title: "Accessories Collection", subtitle: "Complete your look with curated accessories" },
+    "women": { title: "Women's Collection", subtitle: "Timeless pieces designed for the modern woman" },
+    "men": { title: "Men's Collection", subtitle: "Modern essentials for the contemporary man" },
+    "accessories": { title: "Accessories Collection", subtitle: "Complete your look with curated accessories" },
+    "new-arrivals": { title: "New Arrivals", subtitle: "Discover the latest additions to our collection" },
+    "sale": { title: "Sale", subtitle: "Great styles at even better prices" },
 };
 
 const CategoryPage = () => {
-    const { category } = useParams<{ category: string }>();
+    const { category: paramCategory } = useParams<{ category: string }>();
+    const location = useLocation();
+    const category = paramCategory || location.pathname.replace("/", "");
     const config = categoryConfig[category || ""] || categoryConfig.women;
 
     const [filtersOpen, setFiltersOpen] = useState(false);
@@ -34,7 +38,7 @@ const CategoryPage = () => {
                         <Link to="/" style={{ textDecoration: "none", color: "#999" }}>Home</Link>
                         <Typography sx={{ color: "#999", fontSize: 13 }}>/</Typography>
                         <Typography sx={{ color: "#c8a951", fontSize: 13, fontWeight: 500 }}>
-                            {category ? category.charAt(0).toUpperCase() + category.slice(1) : ""}
+                            {config.title}
                         </Typography>
                     </Box>
                     <Typography sx={{ color: "#c8a951", fontSize: 13 }}>
@@ -79,6 +83,7 @@ const CategoryPage = () => {
                     onClose={() => setFiltersOpen(false)}
                     filters={currentFilters}
                     onUpdateFilters={updateFilters}
+                    showCategoryFilter={category === "sale" || category === "new-arrivals"}
                 />
 
                 {/* Product Grid */}

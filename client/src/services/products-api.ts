@@ -36,6 +36,9 @@ interface FilterProductsParams {
     sort?: string;
     page?: number;
     limit?: number;
+    onSale?: boolean;
+    newArrivals?: boolean;
+    filterByCategories?: string;
 }
 
 export const fetchFilteredProducts = async (params: FilterProductsParams): Promise<FilterProductsResponse> => {
@@ -51,6 +54,9 @@ export const fetchFilteredProducts = async (params: FilterProductsParams): Promi
         { name: "maxPrice",  type: "number" },
         { name: "page",      type: "number" },
         { name: "limit",     type: "number" },
+        { name: "onSale",      type: "boolean" },
+        { name: "newArrivals",  type: "boolean" },
+        { name: "filterByCategories",   type: "string" },
     ];
 
     for (const rule of paramRules) {
@@ -62,6 +68,8 @@ export const fetchFilteredProducts = async (params: FilterProductsParams): Promi
         } else if (rule.type === "array" &&  value.length > 0) {
             query[rule.name] = value.join(",");
         } else if (rule.type === "number") {
+            query[rule.name] = String(value);
+        } else if (rule.type === "boolean") {
             query[rule.name] = String(value);
         }
     }

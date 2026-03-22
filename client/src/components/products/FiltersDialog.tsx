@@ -5,12 +5,19 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-const types = ["Shirts", "Jeans", "Shoes", "Jackets", "Dresses", "Bags"];
-const sizes = ["6", "7", "8", "9", "10", "11", "12", "S", "M", "L", "XL"];
+const types = ["Dresses", "Jeans", "Jackets", "T-Shirts", "Pants", "Bags", "Shoes", "Coats", "Blouses", "Sweaters", "Skirts", "Sets"];
+const categories = ["Women", "Men", "Accessories"];
+const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 const colors = [
-    "#000", "#c8a951", "#8B4513", "#1E40AF", "#991B1B", "#1a1a1a",
-    "#111", "#222", "#D2691E", "#F5DEB3", "#333", "#444",
-    "#2a2a2a", "#3a3a3a", "#1E40AF", "#2d2d2d", "#9CA3AF",
+    { name: "Black", hex: "#000" },
+    { name: "White", hex: "#fff" },
+    { name: "Gold", hex: "#c8a951" },
+    { name: "Brown", hex: "#8B4513" },
+    { name: "Blue", hex: "#1E40AF" },
+    { name: "Red", hex: "#991B1B" },
+    { name: "Grey", hex: "#9CA3AF" },
+    { name: "Beige", hex: "#F5DEB3" },
+    { name: "Navy", hex: "#1a1a3a" },
 ];
 
 interface FiltersDialogProps {
@@ -22,14 +29,16 @@ interface FiltersDialogProps {
         selectedSizes: string[];
         selectedColors: string[];
         selectedTypes: string[];
+        selectedCategories: string[];
     };
     onUpdateFilters: (filters: FiltersDialogProps["filters"]) => void;
+    showCategoryFilter?: boolean;
 }
 
-const FiltersDialog = ({ open, onClose, filters, onUpdateFilters }: FiltersDialogProps) => {
-    const { sortBy, priceRange, selectedSizes, selectedColors, selectedTypes } = filters;
+const FiltersDialog = ({ open, onClose, filters, onUpdateFilters, showCategoryFilter }: FiltersDialogProps) => {
+    const { sortBy, priceRange, selectedSizes, selectedColors, selectedTypes, selectedCategories } = filters;
 
-    const toggle = (field: "selectedSizes" | "selectedColors" | "selectedTypes", value: string) => {
+    const toggle = (field: "selectedSizes" | "selectedColors" | "selectedTypes" | "selectedCategories", value: string) => {
         const current = filters[field];
         const updated = current.includes(value)
             ? current.filter((v) => v !== value)
@@ -44,6 +53,7 @@ const FiltersDialog = ({ open, onClose, filters, onUpdateFilters }: FiltersDialo
             selectedSizes: [],
             selectedColors: [],
             selectedTypes: [],
+            selectedCategories: [],
         });
     };
 
@@ -74,6 +84,28 @@ const FiltersDialog = ({ open, onClose, filters, onUpdateFilters }: FiltersDialo
                                 <MenuItem value="popular">Most Popular</MenuItem>
                             </Select>
                         </FormControl>
+
+                        {showCategoryFilter && (
+                            <>
+                                <Typography sx={{ fontWeight: 700, fontSize: 11, letterSpacing: 1, mb: 1.5 }}>CATEGORY</Typography>
+                                <Box sx={{ mb: 3 }}>
+                                    {categories.map((cat) => (
+                                        <FormControlLabel
+                                            key={cat}
+                                            control={
+                                                <Checkbox
+                                                    checked={selectedCategories.includes(cat.toLowerCase())}
+                                                    onChange={() => toggle("selectedCategories", cat.toLowerCase())}
+                                                    size="small"
+                                                />
+                                            }
+                                            label={cat}
+                                            sx={{ display: "block", mb: 0.5, "& .MuiTypography-root": { fontSize: 12 } }}
+                                        />
+                                    ))}
+                                </Box>
+                            </>
+                        )}
 
                         {/* Type */}
                         <Typography sx={{ fontWeight: 700, fontSize: 11, letterSpacing: 1, mb: 1.5 }}>TYPE</Typography>
@@ -141,16 +173,16 @@ const FiltersDialog = ({ open, onClose, filters, onUpdateFilters }: FiltersDialo
                         {/* Color */}
                         <Typography sx={{ fontWeight: 700, fontSize: 11, letterSpacing: 1, mb: 1.5 }}>COLOR</Typography>
                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
-                            {colors.map((color, index) => (
+                            {colors.map((color) => (
                                 <Box
-                                    key={index}
-                                    onClick={() => toggle("selectedColors", color)}
+                                    key={color.name}
+                                    onClick={() => toggle("selectedColors", color.name)}
                                     sx={{
                                         width: 26,
                                         height: 26,
-                                        backgroundColor: color,
+                                        backgroundColor: color.hex,
                                         borderRadius: "50%",
-                                        border: selectedColors.includes(color) ? "2px solid #c8a951" : "2px solid #eee",
+                                        border: selectedColors.includes(color.name) ? "2px solid #c8a951" : "2px solid #eee",
                                         cursor: "pointer",
                                         "&:hover": { borderColor: "#c8a951" },
                                     }}
