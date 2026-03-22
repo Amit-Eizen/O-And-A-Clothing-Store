@@ -97,7 +97,9 @@ const OrderSummary = ({ subtotal, shipping, tax, total, onCheckout, isEmpty }: O
             <Box sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 1 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <LocalShippingOutlinedIcon sx={{ fontSize: 18, color: "#2e7d32" }} />
-                    <Typography sx={{ fontSize: 12, color: "#2e7d32" }}>You qualify for free shipping!</Typography>
+                    <Typography sx={{ fontSize: 12, color: shipping === 0 ? "#2e7d32" : "#666" }}>
+                        {shipping === 0 ? "You qualify for free shipping!" : "Free shipping on orders over $149"}
+                    </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <LockOutlinedIcon sx={{ fontSize: 18, color: "#999" }} />

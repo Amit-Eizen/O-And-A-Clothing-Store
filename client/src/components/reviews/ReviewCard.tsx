@@ -32,6 +32,11 @@ const ReviewCard = ({ reviewId, reviewerName, reviewerAvatar, date, rating, titl
     const [editData, setEditData] = useState<{ title: string; content: string; rating: number } | null>(null);
 
     const handleLike = async () => {
+        if (!userId) {
+            alert("Please log in to like a review");
+            return;
+        }
+        
         if (liked) {
             setLiked(false);
             setCurrentHelpfulCount(currentHelpfulCount - 1);

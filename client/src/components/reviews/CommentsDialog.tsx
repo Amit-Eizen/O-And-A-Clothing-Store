@@ -64,6 +64,10 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
     }, [open, reviewId]);
 
     const handleAddComment = async () => {
+        if (!localStorage.getItem("token")) {
+            alert("Please log in to post a comment");
+            return;
+        }
         if (!newComment.trim() || submitting) return;
 
         setSubmitting(true);
@@ -187,35 +191,41 @@ const CommentsDialog = ({ open, onClose, reviewId, reviewerName, reviewerAvatarL
                 )}
 
                 {/* Write Comment */}
-                <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
-                    <Avatar sx={{ width: 36, height: 36, backgroundColor: "#f5f5f5", color: "#666", fontSize: 12, fontWeight: 600 }}>
-                        {currentUserAvatar}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={3}
-                            placeholder="Write a comment..."
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            sx={{ mb: 1 }}
-                        />
-                        <Button
-                            variant="contained"
-                            onClick={handleAddComment}
-                            disabled={!newComment.trim() || submitting}
-                            sx={{
-                                backgroundColor: "#c8a951",
-                                fontSize: 13,
-                                fontWeight: 600,
-                                "&:hover": { backgroundColor: "#b8993e" },
-                            }}
-                        >
-                            Send →
-                        </Button>
+                {localStorage.getItem("token") ? (
+                    <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                        <Avatar sx={{ width: 36, height: 36, backgroundColor: "#f5f5f5", color: "#666", fontSize: 12, fontWeight: 600 }}>
+                            {currentUserAvatar}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={3}
+                                placeholder="Write a comment..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                sx={{ mb: 1 }}
+                            />
+                            <Button
+                                variant="contained"
+                                onClick={handleAddComment}
+                                disabled={!newComment.trim() || submitting}
+                                sx={{
+                                    backgroundColor: "#c8a951",
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    "&:hover": { backgroundColor: "#b8993e" },
+                                }}
+                            >
+                                Send →
+                            </Button>
+                        </Box>
                     </Box>
-                </Box>
+                ) : (
+                    <Typography sx={{ fontSize: 13, color: "#999", textAlign: "center", py: 2 }}>
+                        Please log in to post a comment
+                    </Typography>
+                )}
             </Box>
         </Dialog>
     );

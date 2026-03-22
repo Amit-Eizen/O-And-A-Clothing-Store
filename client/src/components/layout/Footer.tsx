@@ -6,8 +6,8 @@ const footerLinks = {
         { label: "Women", path: "/women" },
         { label: "Men", path: "/men" },
         { label: "Accessories", path: "/accessories" },
-        { label: "New Arrivals", path: "/" },
-        { label: "Sale", path: "/" },
+        { label: "New Arrivals", path: "/new-arrivals" },
+        { label: "Sale", path: "/sale" },
     ],
 
     help: [

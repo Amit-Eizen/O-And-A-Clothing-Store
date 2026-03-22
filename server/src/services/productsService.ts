@@ -12,6 +12,9 @@ interface FilterParams {
     sort?: string;
     page?: number;
     limit?: number;
+    onSale?: boolean;
+    newArrivals?: boolean;
+    filterByCategories?: string;
 }
 
 class ProductsService extends BaseService {
@@ -57,6 +60,16 @@ class ProductsService extends BaseService {
         }
         if (params.colors && params.colors.length > 0) {
             filter.colors = { $in: params.colors };
+        }
+        if (params.onSale) {
+            filter.salePrice = { $exists: true, $ne: null };
+        }
+        if (params.newArrivals) {
+            filter.isFeaturedNewArrival = true;
+        }
+        if (params.filterByCategories) {
+            const cats = params.filterByCategories.split(",");
+            filter.category = { $in: cats };
         }
 
         return filter;

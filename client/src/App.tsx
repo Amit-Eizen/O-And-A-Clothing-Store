@@ -29,6 +29,8 @@ function App() {
               <Route path="/:category/:id" element={<ProductDetailPage />} />
               <Route path="/search" element={<AISearchPage />} />
               <Route path="/account" element={<MyAccountPage />} />
+              <Route path="/new-arrivals" element={<CategoryPage />} />
+              <Route path="/sale" element={<CategoryPage />} />
               <Route path="/:category" element={<CategoryPage />} />
             </Routes>
             <Footer />

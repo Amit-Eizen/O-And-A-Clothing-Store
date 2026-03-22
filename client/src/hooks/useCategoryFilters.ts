@@ -6,6 +6,7 @@ export interface CategoryFilters {
     selectedSizes: string[];
     selectedColors: string[];
     selectedTypes: string[];
+    selectedCategories: string[];
 }
 
 const useCategoryFilters = (category: string) => {
@@ -17,6 +18,7 @@ const useCategoryFilters = (category: string) => {
         selectedSizes: [] as string[],
         selectedColors: [] as string[],
         selectedTypes: [] as string[],
+        selectedCategories: [] as string[],
     }), []);
     
     const currentFilters = filtersState[category] || defaultFilters;
