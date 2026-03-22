@@ -65,7 +65,7 @@ class ProductsService extends BaseService {
             filter.salePrice = { $exists: true, $ne: null };
         }
         if (params.newArrivals) {
-            filter.isFeaturedNewArrival = true;
+            filter.tags = { $in: [/^new$/i] };
         }
         if (params.filterByCategories) {
             const cats = params.filterByCategories.split(",");
